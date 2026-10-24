@@ -610,3 +610,16 @@ Do not mark this module complete merely because it has been read.
 - [CometBFT v0.39.4 module file](https://github.com/cometbft/cometbft/blob/v0.39.4/go.mod)
 - [Interchain Developer Academy — Cosmos SDK concepts](https://ida.interchain.io/academy/2-cosmos-concepts/)
 - [Cosmos Stack roadmap for 2026](https://cosmos.network/blog/the-cosmos-stack-roadmap-2026)
+
+
+## Learner checkpoint — architecture concepts (2026-10-24)
+
+**Checkpoint:** 3/3 correct (100%) on the conceptual questions following Sections 1–8 of this chapter.
+
+- **Q1 — separation of consensus and execution: correct.** Consensus establishes the agreed block/transaction order; the deterministic application applies business rules to the ordered input.
+- **Q2 — app-specific chain trade-off: correct.** Chain-specific control comes with responsibility for validator security, operations, upgrades, and application correctness.
+- **Q3 — meaning of CheckTx success: correct.** Admission success is not proof of block inclusion, commitment, or completed business workflow.
+
+**Evidence limitation:** This checkpoint demonstrates conceptual understanding only. It does not establish source-level mastery, a runnable lab, a successful build, benchmark results, or production readiness.
+
+**Next step:** inspect the selected learning reference version's `BaseApp`, ABCI entry points, transaction execution path, message routing, state cache/commit behavior, and event/query behavior. Keep SDK v0.54.4 a provisional source-study candidate only; do not treat it as an approved dependency baseline. Pin every source claim to the exact tag and symbol before documenting it as implementation fact.
