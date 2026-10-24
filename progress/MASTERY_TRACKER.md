@@ -34,6 +34,18 @@ This tracker records evidence, not intentions. Mark an item complete only after 
 - [ ] State stores, caches, events, and queries
 - [ ] Genesis, configuration, upgrades, and local networks
 
+
+## Learner evidence log
+
+### Module 5 — Cosmos deep architecture (2026-10-24)
+
+- [x] Conceptual checkpoint: 3/3 correct. Evidence: Q1 identified the consensus/application-execution boundary; Q2 identified the security and operational responsibilities of an app-specific chain; Q3 distinguished CheckTx admission from commitment.
+- [~] Source-level BaseApp and transaction call graph — next step; exact symbols and release tag still need interactive inspection.
+- [ ] Runnable lab and failure experiment — not performed.
+- [ ] Selected dependency baseline and application build/test — not approved or performed.
+- [ ] Production or performance claims — none established.
+
+
 ## Mastery evidence template
 
 For each item, record:
