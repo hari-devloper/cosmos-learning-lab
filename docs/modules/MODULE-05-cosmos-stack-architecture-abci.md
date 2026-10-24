@@ -692,3 +692,101 @@ This is a source-derived summary of the inspected v0.54.4 files, not a claim tha
 - **Failure experiment:** not run.
 - **Dependency baseline:** not approved.
 - **Next:** inspect `runMsgs`, message service registration, the configured AnteHandler chain, store/cache semantics, and the application/module wiring; then design a minimal reproducible lab before considering implementation.
+
+
+## Source-level mastery checkpoint — BaseApp (2026-10-24)
+
+**Result: 3/3 correct (100%)**
+
+- **Q1 — B: correct.** When message execution fails, the message-execution cache is not written through the successful finalize-mode path, preventing partial business-state changes from that cache.
+- **Q2 — C: correct.** The AnteHandler cache can be written after successful ante processing and before message execution. Do not assume all fee/sequence effects are rolled back after a message failure; verify configured decorators and test behavior.
+- **Q3 — A: correct.** `MsgServiceRouter.Handler(msg)` looks up the registered handler using the message type URL.
+
+**Evidence boundary:** This is a source-reading checkpoint, not a runnable lab or test. It demonstrates understanding of the inspected source behavior but does not prove the application is configured correctly or production-ready.
+
+
+## Source investigation 2 — AnteHandler and module wiring (2026-10-24)
+
+**Reference pinned for study:** Cosmos SDK `v0.54.4`. This remains a source-study candidate, not an approved dependency baseline.
+
+Files inspected:
+- `baseapp/options.go` — blob SHA `86eb3fdd8f099806cfa44130c2c5beae68c428dc`
+- `types/handler.go` — blob SHA `4c453aa5b7cee5482bc28f32095f3d94faa1fa99`
+- `x/auth/ante/ante.go` — blob SHA `944b825e693ac4ea4f5ad4e6b943c2f0ff314af4`
+- `types/module/module.go` — blob SHA `43d75538041e28bd84c9fa9a3b0bdb7dcfea4f92`
+- `simapp/app.go` — blob SHA `0b33f054305096cee2e2231cfe3ab1cd266dcdea` (reference application's wiring example, not a template to copy blindly)
+
+### A. AnteHandler construction and attachment are separate steps
+
+The default auth ante builder, `ante.NewAnteHandler(HandlerOptions)`, validates required dependencies (including AccountKeeper, BankKeeper and SignModeHandler) and creates an ordered list of decorators. The inspected default order is:
+
+1. SetUpContext
+2. ExtensionOptions
+3. ValidateBasic
+4. TxTimeoutHeight
+5. ValidateMemo
+6. ConsumeGasForTxSize
+7. DeductFee
+8. SetPubKey
+9. ValidateSigCount
+10. SigGasConsume
+11. SigVerification
+12. IncrementSequence
+
+This is the default builder's sequence in this exact source version. It is not a universal guarantee for every Cosmos application; custom handlers and options can change the chain.
+
+The function returns `sdk.ChainAnteDecorators(anteDecorators...)`. The separate `BaseApp.SetAnteHandler(ah)` method stores the constructed handler and panics if called after BaseApp is sealed. Thus, building the chain and attaching it to the application are distinct wiring steps.
+
+### B. Decorator order is behavior, not cosmetic style
+
+In `types/handler.go`, `ChainAnteDecorators` explicitly says the first decorator is outermost and the last is innermost. Each decorator wraps the next handler. The source warns that gas-meter setup must be the first decorator in applications using a GasMeter; otherwise processing could use an infinite gas meter and create a denial-of-service risk.
+
+For ISN, never reorder fee, signature, sequence or gas decorators by intuition. Any customization must be justified against the exact SDK contract, tested, and documented.
+
+### C. Module registration, service registration and lifecycle order are different concerns
+
+The inspected `types/module/module.go` defines module-manager behavior. `Manager.RegisterServices(cfg)` asks modules that implement the service interfaces to register message/query services with the configurator and returns registration errors. In `simapp/app.go`, the reference application constructs a `module.Manager`, configures explicit ordering for pre-block, begin-block, end-block and genesis hooks, creates a configurator with the message and gRPC query routers, and calls `RegisterServices`.
+
+Do not confuse these mechanisms:
+- **Module construction:** creates module instances and supplies their dependencies.
+- **Service registration:** makes message/query service implementations discoverable through routers.
+- **Block-hook ordering:** controls ordered pre-block/begin-block/end-block module calls.
+- **AnteHandler chain:** performs transaction-level checks/effects before business-message execution.
+- **Message handler:** implements the semantics of a particular message.
+
+A service can be registered correctly while its business logic is still incorrect. A module can exist in the manager without automatically implying that every desired message/query route is registered. App wiring must be inspected.
+
+### D. Reconstructed wiring path in the reference app
+
+```text
+Construct keepers and module instances
+  -> module.NewManager(...)
+  -> configure explicit lifecycle ordering
+  -> create Configurator(message router, gRPC query router)
+  -> ModuleManager.RegisterServices(configurator)
+
+Separately:
+  ante.NewAnteHandler(HandlerOptions)
+    -> ChainAnteDecorators(ordered decorators)
+    -> BaseApp.SetAnteHandler(anteHandler)
+```
+
+This summarizes the inspected SimApp example. It is not an ISN implementation and must not be copied without architecture and compatibility review.
+
+### E. ISN design rules derived from this investigation
+
+- Specify the exact transaction ante policy before implementing payment messages: signers, authorization, fees (if any), sequence/replay behavior, gas limits, timeouts and failure semantics.
+- Decide which SDK-provided account/bank/auth capabilities to reuse versus which settlement-specific state and handlers are custom.
+- Register settlement message services through the selected SDK's supported wiring and prove routes resolve in tests.
+- Review lifecycle ordering only for modules that actually implement those hooks; document why any explicit ordering is required.
+- Test malformed/unsigned transactions, invalid signatures, insufficient funds, repeated submissions, failed message execution, and the resulting committed account/sequence/fee state.
+- Keep client API status separate from chain commitment and downstream reconciliation status.
+
+### Evidence and gaps
+
+- **Source inspection:** completed for the files listed above at tag v0.54.4.
+- **Mastery checkpoint:** 3/3 correct for the previous BaseApp/cache questions.
+- **Runnable lab/build/test:** not run.
+- **ISN app wiring:** not implemented.
+- **Dependency baseline:** not approved.
+- **Next:** design the minimal source-backed lab and test matrix; then inspect account/bank keeper semantics and exact state-cache behavior before any implementation proposal is approved.
