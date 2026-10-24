@@ -623,3 +623,72 @@ Do not mark this module complete merely because it has been read.
 **Evidence limitation:** This checkpoint demonstrates conceptual understanding only. It does not establish source-level mastery, a runnable lab, a successful build, benchmark results, or production readiness.
 
 **Next step:** inspect the selected learning reference version's `BaseApp`, ABCI entry points, transaction execution path, message routing, state cache/commit behavior, and event/query behavior. Keep SDK v0.54.4 a provisional source-study candidate only; do not treat it as an approved dependency baseline. Pin every source claim to the exact tag and symbol before documenting it as implementation fact.
+
+
+## Source investigation 1 — BaseApp transaction lifecycle (2026-10-24)
+
+**Reference pinned for study:** Cosmos SDK tag `v0.54.4`. This is a provisional reading reference, not an approved dependency baseline. Files inspected:
+
+- `baseapp/baseapp.go` — blob SHA `4380d5da9c48945e8a2e1310be1af165d47af076`
+- `baseapp/abci.go` — blob SHA `e7ef7c734c3c4cd2de8ba6781a2d33a26223a5a0`
+- `baseapp/msg_service_router.go` — blob SHA `d6ecbadc9e78b44318b34d25314799e91102f9b3`
+
+### Verified entry points and observed behavior
+
+1. `BaseApp.CheckTx` in `baseapp/abci.go` selects new-check or recheck execution mode and calls `RunTx`. Its source comment says messages are not executed in CheckTx mode; validation and the AnteHandler are executed, and successful ante-state is retained in the internal CheckTx state. This is admission processing, not settlement.
+2. `BaseApp.PrepareProposal` and `BaseApp.ProcessProposal` are separate ABCI entry points. The former prepares the transaction set for a proposed block; the latter processes a proposed block. Do not collapse either into the commit step.
+3. `BaseApp.FinalizeBlock` is a wrapper that calls `internalFinalizeBlock` unless optimistic execution supplies a usable result. In the inspected source, `internalFinalizeBlock` calls pre-block and begin-block logic, then `executeTxsWithExecutor`, then end-block logic, and returns transaction results and other block-level outputs.
+4. `executeTxsWithExecutor` uses the configured transaction runner and `app.deliverTx`; `deliverTx` calls `RunTx` in finalize mode.
+5. `BaseApp.RunTx` decodes the transaction if necessary, obtains its messages, validates basic message requirements, checks that each message has a registered handler, and runs the AnteHandler when configured. It uses cached store branches. It then calls `runMsgs`; message execution is only performed in simulation/finalize modes, not ordinary CheckTx mode.
+6. In finalize mode, the message cache is written only when message/post-handler processing succeeds. AnteHandler cache writes occur earlier, after successful ante processing. Therefore a failed message execution does not automatically imply that every ante effect is rolled back; fee/sequence behavior must be understood from the configured AnteHandler and tested.
+7. `MsgServiceRouter.Handler` looks up a handler by `sdk.MsgTypeURL(msg)`. `RegisterService` registers handlers from a service description. A message type without a registered handler fails before message execution.
+8. `BaseApp.Commit` invokes the optional pre-committer, commits the application multistore, runs commit listeners, resets CheckTx state to the latest committed state, clears finalize state, and triggers snapshot handling as configured. `workingHash` separately writes finalize state into the root multistore and calculates the working application hash before Commit flushes the state.
+
+### Conceptual call path reconstructed from inspected symbols
+
+```text
+CheckTx
+  -> RunTx(check/recheck)
+     -> decode + basic validation + handler lookup
+     -> AnteHandler (if configured)
+     -> no business message execution in CheckTx
+
+FinalizeBlock
+  -> internalFinalizeBlock
+     -> preBlock
+     -> beginBlock
+     -> executeTxsWithExecutor
+        -> deliverTx
+           -> RunTx(finalize)
+              -> decode/validate/handler lookup
+              -> AnteHandler (if configured)
+              -> runMsgs
+                 -> registered message handlers
+              -> write message cache only on success
+     -> endBlock
+     -> response with transaction results
+
+Commit
+  -> multistore Commit
+  -> commit listeners
+  -> reset CheckTx state / clear finalize state
+```
+
+This is a source-derived summary of the inspected v0.54.4 files, not a claim that every optional hook, middleware, optimistic-execution path, or application-specific module is shown. The exact complete call graph still needs further tracing.
+
+### ISN implications
+
+- Never report “settled” from CheckTx success alone.
+- A payment message should enforce sufficient funds and atomic debit/credit in authoritative application state.
+- Test multi-message transactions and failed message handlers to prove no partial business settlement.
+- Separately test ante effects such as fees and sequence handling; do not assume a failed message undoes all transaction-level effects.
+- Indexing should consume committed results/state and be idempotent; an indexer retry must not apply the payment twice in the read model.
+- Treat SDK version-specific lifecycle semantics as source facts only for the pinned tag above until a different baseline is approved.
+
+### Evidence and gaps
+
+- **Source inspection:** completed for the listed files and functions at tag v0.54.4.
+- **Runnable lab/build/test:** not run.
+- **Failure experiment:** not run.
+- **Dependency baseline:** not approved.
+- **Next:** inspect `runMsgs`, message service registration, the configured AnteHandler chain, store/cache semantics, and the application/module wiring; then design a minimal reproducible lab before considering implementation.
