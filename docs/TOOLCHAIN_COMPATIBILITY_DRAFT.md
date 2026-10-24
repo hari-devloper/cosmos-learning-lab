@@ -6,7 +6,7 @@ Research date: 2026-10-24. This is a compatibility investigation, not a claim th
 
 ## Why the version choice matters
 
-The SDK, CometBFT, IBC-Go, and optional CosmWasm dependencies must be selected as a coherent release family. Do not force a newer SDK into an older IBC integration with ad hoc `replace` directives. A module's declared dependency is useful evidence, but a complete application build and relevant tests are still required.
+The SDK and CometBFT must form a compatible release family for the initial single-chain learning application. IBC-Go and optional CosmWasm dependencies will be evaluated in a separate later-stage compatibility gate because the project explicitly defers IBC implementation. Do not force a newer SDK into an older integration with ad hoc `replace` directives. A module's declared dependency is useful evidence, but a complete application build and relevant tests are still required.
 
 ## Primary-source evidence inspected
 
@@ -34,9 +34,10 @@ The following official `go.mod` files were fetched from their exact release tags
 
 1. The SDK v0.55.0 release uses the CometBFT v0.40.0 line. It is a distinct dependency family from SDK v0.54.4, which declares CometBFT v0.39.4.
 2. The inspected IBC-Go v11.2.0 and wasmd v0.70.5 module files declare SDK v0.54.0 and CometBFT v0.39.0. They do **not** by themselves establish compatibility with SDK v0.55.0 / CometBFT v0.40.0.
-3. SDK v0.54.4 is a plausible candidate for an IBC-capable learning baseline because IBC-Go v11.2.0 declares SDK v0.54.0 and the SDK v0.54.x line uses CometBFT v0.39.x. This is a **candidate only**; validate module resolution, application build, tests, and official compatibility guidance before approval.
-4. SDK v0.55.0 may be evaluated as a separate SDK-only learning track. Do not add IBC-Go v11.2.0 or wasmd v0.70.5 to that track unless an officially supported compatible release family is verified.
-5. CosmWasm is optional and should remain excluded from the initial dependency set unless a concrete learning or product requirement justifies the additional runtime and compatibility burden.
+3. SDK v0.54.4 is a plausible candidate for the single-chain learning baseline and may simplify a later IBC evaluation because IBC-Go v11.2.0 declares SDK v0.54.0 and the SDK v0.54.x line uses CometBFT v0.39.x. This is a **candidate only**; validate official compatibility guidance, module resolution, application build, tests, and release notes before approval.
+4. SDK v0.55.0 may be evaluated as a separate SDK-only track. Do not add IBC-Go v11.2.0 or wasmd v0.70.5 to that track unless an officially supported compatible release family is verified.
+5. CosmWasm is optional and remains excluded from the initial dependency set unless a concrete learning or product requirement justifies the added runtime and compatibility burden.
+6. **IBC is a later-stage topic, not a reason to prematurely choose the initial SDK.** First select and validate a minimal single-chain SDK/CometBFT baseline. Reopen IBC-Go compatibility as its own explicit gate after the single-chain state machine, tests, read model, and reconciliation design have been reviewed.
 
 ## Proposed validation procedure (not yet run)
 
@@ -47,10 +48,11 @@ After selecting a candidate baseline:
 3. Record `go version`, `go env`, exact module graph, and checksums.
 4. Run `go mod tidy` and inspect unexpected major/minor version selection or replacements.
 5. Build the application and run all available unit/integration tests.
-6. Run a local-chain smoke test and any applicable IBC/wasm tests if those components are included.
+6. Run a local-chain smoke test.
 7. Record exact commands and observed results; do not convert expected results into claimed observations.
 8. Review the dependency decision and receive explicit approval before using it in the product repository.
+9. Later, when IBC becomes in-scope, verify the compatible IBC-Go release family and add the necessary tests in a separate decision.
 
 ## Decision gate
 
-No dependency lock, starter application, or implementation work is approved by this draft. The next decision is whether the initial learning path prioritizes an IBC-capable SDK v0.54.x release family or studies SDK v0.55.x separately first.
+No dependency lock, starter application, or implementation work is approved by this draft. The next decision is to choose a candidate SDK/CometBFT release family for the **single-chain learning scope**, verify its source and module graph, and validate it in a disposable application. IBC-Go and CosmWasm are not part of the initial dependency graph unless the user explicitly reopens that scope.
