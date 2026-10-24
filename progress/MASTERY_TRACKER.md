@@ -53,6 +53,20 @@ This tracker records evidence, not intentions. Mark an item complete only after 
 - [ ] Runnable lab and failure experiment.
 - [ ] Clean build/test against an approved dependency baseline.
 
+
+### Module 5 source-level mastery checkpoint — BaseApp (2026-10-24)
+
+- [x] 3/3 correct: message-cache failure semantics; separate AnteHandler cache/fee-sequence implications; MsgServiceRouter lookup by message type URL.
+- Evidence and explanation: `docs/modules/MODULE-05-cosmos-stack-architecture-abci.md`.
+
+### Module 5 source investigation — AnteHandler and module wiring (2026-10-24)
+
+- [~] Inspected `baseapp/options.go`, `types/handler.go`, `x/auth/ante/ante.go`, `types/module/module.go`, and reference wiring in `simapp/app.go`, all from SDK tag `v0.54.4`. Recorded default decorator order, gas-meter ordering warning, SetAnteHandler attachment, module service registration, and explicit block-hook ordering in the handbook.
+- [ ] ISN-specific design review for signer/authorization/fees/sequences/gas/timeouts.
+- [ ] Runnable lab and negative/failure tests.
+- [ ] Clean build/test against an approved dependency baseline.
+
+
 ## Mastery evidence template
 
 For each item, record:
