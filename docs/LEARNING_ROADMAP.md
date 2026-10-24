@@ -1,6 +1,6 @@
 # Cosmos Learning Roadmap
 
-Status: **Draft curriculum — review before locking framework versions or implementation details.**
+Status: **Draft curriculum — user-approved sequencing: single-chain first; IBC later. Framework versions and implementation details still require review.**
 
 ## Working method
 
@@ -57,13 +57,14 @@ Gate: explain and demonstrate the full path with tests and recorded evidence.
 
 Gate: approve the domain model and invariant tests before product implementation.
 
-## Stage 5 — IBC and cross-chain lifecycle
+## Stage 5 — Single-chain settlement application and verification
 
-- IBC architecture, clients, connections, channels, and packets
-- Timeout, acknowledgement, refund, recovery, and reconciliation paths
-- Version-specific compatibility and local test networks
+- Define participants, accounts, assets, transfers, authorization, and legal state transitions
+- Specify accounting invariants before coding
+- Test success, rejection, invalid inputs, duplicate requests, and replay assumptions
+- Build deterministic unit and integration tests around the approved single-chain state machine
 
-Gate: demonstrate success and failure paths; do not treat a packet timeout as proof that the remote chain never executed unrelated work.
+Gate: explain the settlement lifecycle and demonstrate invariant tests and deliberately injected failures. Do not begin IBC implementation in this stage.
 
 ## Stage 6 — Read models and interfaces
 
@@ -84,7 +85,18 @@ Gate: demonstrate that the read model can be rebuilt and reconciled against auth
 
 Gate: evidence-backed risk register and repeatable test suite.
 
-## Stage 8 — Interview and mastery
+## Stage 8 — IBC and cross-chain lifecycle (later stage)
+
+IBC is deliberately deferred until the single-chain settlement state machine, invariants, tests, read model, and reconciliation workflow are understood and reviewed.
+
+- IBC architecture, clients, connections, channels, and packets
+- Timeout, acknowledgement, refund, retry, recovery, and reconciliation paths
+- Compatible release family and local test network validation
+- Cross-chain failure experiments and end-to-end evidence
+
+Gate: demonstrate success and failure paths with the selected compatible IBC-Go release. Do not treat a packet timeout as proof that the remote chain never executed unrelated work.
+
+## Stage 9 — Interview and mastery
 
 - Explain architecture and trade-offs without notes
 - Draw key execution and packet flows
