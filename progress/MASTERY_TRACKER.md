@@ -46,6 +46,13 @@ This tracker records evidence, not intentions. Mark an item complete only after 
 - [ ] Production or performance claims — none established.
 
 
+### Module 5 source investigation — BaseApp (2026-10-24)
+
+- [~] Source-level lifecycle investigation started against Cosmos SDK `v0.54.4`: inspected `CheckTx`, `RunTx`, `PrepareProposal`, `ProcessProposal`, `FinalizeBlock`, `internalFinalizeBlock`, `executeTxsWithExecutor`, `deliverTx`, `runMsgs`, `Commit`, and `MsgServiceRouter.Handler`. Evidence is documented in `docs/modules/MODULE-05-cosmos-stack-architecture-abci.md`.
+- [ ] Complete module wiring and AnteHandler-chain trace.
+- [ ] Runnable lab and failure experiment.
+- [ ] Clean build/test against an approved dependency baseline.
+
 ## Mastery evidence template
 
 For each item, record:
