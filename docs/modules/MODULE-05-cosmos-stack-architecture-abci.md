@@ -2,7 +2,7 @@
 
 - **Module ID:** COSMOS-ARCH-001
 - **Status:** Deep learning chapter; historical context and architecture concepts with a version-pinned source investigation plan
-- **Last revised:** 2026-10-24
+- **Last revised:** 2026-10-25
 - **Prerequisites:** COSMOS-FOUND-001 through COSMOS-FOUND-004
 - **Project sequencing:** Learn and review with GPT first; implement with Codex only after approval. Single-chain settlement first; IBC implementation later.
 - **Version decision:** No final SDK/CometBFT dependency baseline is approved. Source investigation examples use the official Cosmos SDK v0.54.4 tag where stated; do not silently generalize these details to other versions.
@@ -790,3 +790,304 @@ This summarizes the inspected SimApp example. It is not an ISN implementation an
 - **ISN app wiring:** not implemented.
 - **Dependency baseline:** not approved.
 - **Next:** design the minimal source-backed lab and test matrix; then inspect account/bank keeper semantics and exact state-cache behavior before any implementation proposal is approved.
+
+
+## End-to-end integration: how every Module 5 concept connects
+
+- **Integration ID:** COSMOS-ARCH-001-E2E
+- **Updated:** 2026-10-25
+- **Purpose:** One connected narrative for the entire module. Read this after the earlier deep-dive sections; it ties the individual concepts together instead of treating them as isolated definitions.
+- **Evidence rule:** Architecture explanations below are learning material. Version-specific behavior is only asserted where the pinned v0.54.4 source investigations above support it. No runnable ISN app, passing build, or failure experiment is claimed here.
+
+### 1. The complete mental model
+
+The Institutional Settlement Network (ISN) is being studied as an application-specific chain for institutional transfers. The chain's committed application state is the settlement authority. APIs, explorers, PostgreSQL tables, dashboards, and reporting are clients or derived views; they must not independently decide that money moved.
+
+The layers answer different questions:
+
+| Layer | Question it answers | ISN example | What it must not be mistaken for |
+|---|---|---|---|
+| Client / institution portal | What does an institution want to submit or inspect? | Prepare a transfer request | Settlement authority |
+| API / transaction builder | How is a request converted into a correctly encoded, signed transaction? | Validate request shape, build bytes, request signature | Proof that a transfer committed |
+| Transaction authentication / ante processing | Is this transaction admissible under the chain's transaction policy? | Signature, account sequence/replay checks, fee and gas policy | Institutional business authorization by itself |
+| Consensus (CometBFT) | Which ordered blocks are agreed by validators under the configured fault assumptions? | Agree on block order | Proof that a transfer satisfies balance and policy rules |
+| Application framework (ABCI boundary and BaseApp in an SDK app) | How are agreed blocks and transactions handed to deterministic application execution? | Run transaction processing and block lifecycle | Business policy automatically supplied by the framework |
+| SDK modules, message services, keepers | What state transitions and queries does this application define? | Settlement module checks and applies a transfer | Permission to bypass another module's invariants |
+| Stores / multistore / commit | Which application state is staged, committed, and represented by the chain's application commitment? | Persist resulting balances and transfer record | Same thing as a transaction hash |
+| Indexer / PostgreSQL read model | How can committed chain data be searched and displayed efficiently? | Explorer history, reporting, reconciliation inputs | A second settlement ledger |
+| Reconciliation / operations | Do derived views agree with authoritative chain records, and can gaps be repaired safely? | Detect a missing or duplicated indexed transfer | Permission to rewrite authoritative history |
+
+**Key connection:** cryptographic identity tells us which bytes were signed and by whom; ante processing applies transaction-level rules; consensus establishes agreed ordering; deterministic application execution applies business rules; commit makes resulting application state durable according to the chain's commit protocol; the indexer projects committed facts for querying; reconciliation detects and repairs derived-view discrepancies.
+
+### 2. End-to-end architecture map
+
+```mermaid
+flowchart TD
+  A[Institution / Portal] --> B[API: validate request and build transaction]
+  B --> C[Sign encoded transaction bytes]
+  C --> D[Node transaction admission: CheckTx]
+  D --> E[Validator proposal and consensus ordering]
+  E --> F[ABCI block execution / FinalizeBlock]
+  F --> G[BaseApp transaction processing]
+  G --> H[AnteHandler: transaction policy]
+  H --> I[Message service router]
+  I --> J[Settlement handler + keepers]
+  J --> K[State stores / multistore]
+  K --> L[Commit and application state commitment]
+  L --> M[Committed block/results/state source]
+  M --> N[Indexer with durable checkpoint]
+  N --> O[PostgreSQL read model / Explorer / Reports]
+  M --> P[Reconciliation]
+  O --> P
+  P --> Q[Alert, investigate, replay or rebuild derived data]
+```
+
+This is a **conceptual system map**, not a complete source-level call graph and not an implementation diagram. Exact ABCI method names, hooks, middleware, and call paths must be checked against the selected release. The existing v0.54.4 investigation records a partial, source-derived path below.
+
+### 3. One transfer from request to query: the ordered walkthrough
+
+Use a hypothetical transfer of 1,000 units from Institution A to Institution B. This example is explanatory; it is not a statement that ISN's business rules or code have already been implemented.
+
+1. **Define the business intent.** The API receives a transfer request. It checks request shape and returns clear validation errors. API validation improves usability but cannot replace on-chain checks, because clients can be bypassed.
+2. **Build the transaction.** The client encodes a message using the chosen schema and signing mode. The transaction's identity/hash is a fingerprint of encoded transaction bytes under the relevant chain rules. It is not a balance, a transfer outcome, or proof of final settlement by itself.
+3. **Sign the required bytes.** The signing key creates a signature that can be checked against the public key and signing rules. A valid signature establishes a cryptographic authorization fact under those rules; it does not automatically prove that the institution is permitted to transfer these funds under ISN's business policy.
+4. **Run transaction admission checks.** A node may run `CheckTx` to decide whether a transaction is admissible to its mempool. The exact checks depend on the application and SDK configuration. A successful `CheckTx` is **not** settlement and does not guarantee inclusion or successful execution.
+5. **Agree on block order.** Consensus orders proposed transactions into a block according to the chain's protocol and fault assumptions. Consensus does not independently understand the meaning of “Institution A pays Institution B.”
+6. **Execute the agreed block.** The application processes the block through its ABCI boundary and SDK lifecycle. In the inspected SDK v0.54.4 path, `FinalizeBlock` enters `internalFinalizeBlock`, then block hooks and transaction execution; the exact configured path can include additional application-specific behavior.
+7. **Run transaction-level policy.** The configured AnteHandler may check transaction properties, signatures, sequence/replay conditions, fees, and gas. Decorator order matters. These checks are separate from settlement-specific authorization and balance rules.
+8. **Route the message.** The message service router maps a message type URL to a registered handler. A registered route only makes a handler discoverable; it does not make the handler's business logic correct.
+9. **Apply settlement rules.** The settlement handler and keepers must validate the relevant institution permissions, transfer amount, account status, sufficient available funds, and any domain-specific limits. The exact policy is an ISN design decision still requiring specification.
+10. **Stage state changes atomically.** Debit and credit must be part of one successful state transition. A failed business transfer must not leave only the debit or only the credit applied. State caches/branches and the precise SDK transaction semantics must be tested, not inferred from names.
+11. **Finish block execution and commit.** Block lifecycle work completes and application state is committed according to the chain's protocol. The v0.54.4 source investigation documents the roles of `FinalizeBlock`, working state/hash calculation, and `Commit`; do not collapse these into a single generic “transaction succeeded” event.
+12. **Expose committed facts.** A committed transaction result or committed block/state is the source for downstream indexing. The API should distinguish submitted, admitted, included, execution-success/failure, and committed/confirmed statuses according to the exact chain/client contract. Never label `CheckTx` success “settled.”
+13. **Index idempotently.** The indexer consumes committed source data, stores a durable checkpoint, and upserts/deduplicates records using stable chain identity such as chain ID plus block height and transaction position/hash as appropriate to the selected source. Retries must not duplicate a transfer in the read model.
+14. **Reconcile and recover.** Compare indexer progress and derived records with authoritative chain data. If PostgreSQL is missing a committed transfer, investigate the gap and replay/backfill or rebuild the derived projection. Do not change blockchain balances to match PostgreSQL.
+15. **Report honestly.** The portal/explorer can show chain-derived status and indexer freshness separately. “Committed on chain” and “visible in reporting database” are different operational facts.
+
+### 4. Lifecycle concepts that must not be confused
+
+#### Transaction-level lifecycle
+
+- **Encoding and signing:** produce a transaction representation and signature under defined rules.
+- **CheckTx / recheck:** node admission/mempool-related processing; not committed business execution.
+- **Proposal processing and consensus:** select and agree on block order according to the protocol.
+- **FinalizeBlock / execution:** execute agreed block transactions and block lifecycle hooks in the application.
+- **Commit:** commit application state and perform the release-specific commit work.
+- **Indexing:** derive a queryable projection from committed data.
+- **Reconciliation:** detect discrepancies between authoritative chain facts and derived data.
+
+These are distinct stages. An API response should never merge all of them into a single ambiguous `success` boolean.
+
+#### Module lifecycle and application wiring
+
+A Cosmos SDK application also has a **startup/configuration lifecycle**, which is not the same as an individual transfer:
+
+1. Construct application configuration and stores.
+2. Construct keepers and module instances with their dependencies.
+3. Register modules with the module manager as appropriate.
+4. Configure explicit pre-block, begin-block, end-block, and genesis ordering for modules that implement those hooks.
+5. Create the service configurator/router and register message and query services.
+6. Construct and attach the AnteHandler separately from message-service registration.
+7. Load or initialize genesis state and start the application using the selected release's supported setup path.
+
+These steps are a conceptual checklist, not a universal exact function sequence. Follow the selected SDK version and reference application's actual source. **Construction, service registration, block-hook ordering, AnteHandler attachment, and message handling are different responsibilities.**
+
+#### Genesis, export, upgrades, snapshots, pruning, and archives
+
+- **InitGenesis:** initializes application/module state from the genesis document at chain initialization. Genesis state must satisfy the same core invariants expected of live state.
+- **ExportGenesis:** exports module state for supported export/restart/migration workflows. It is not simply “copy the database”; module export semantics and version support must be checked.
+- **Chain upgrade:** coordinates a planned software/state transition at a defined upgrade point. The upgrade plan, binary versions, migration code, recovery plan, and operator coordination need explicit tests.
+- **Module migration:** transforms persisted module state between schema/logic versions. It must be deterministic, version-aware, and tested with representative prior state.
+- **Snapshot:** a recovery/bootstrap artifact for restoring or quickly syncing state under the implementation's snapshot mechanism. Snapshot validity and restore procedures must be tested.
+- **Pruning:** removes selected historical data to control storage use. Pruning policy changes what a node can serve locally; it must not be confused with reversing committed settlement.
+- **Archival node:** retains more history to support long-range queries, audits, and rebuilding projections where the necessary source data is available. Archive capability, retention, and query guarantees must be explicit.
+- **Application hash/state commitment:** a commitment to application state under the chain's encoding/store rules; not the same object as a transaction hash or a PostgreSQL checksum.
+
+All of these are lifecycle/operations concepts that depend on the exact release and node configuration. The learner must not assume they are all configured or operational merely because a term appears in this chapter.
+
+### 5. State, determinism, and settlement invariants
+
+A deterministic state machine can consistently execute a **wrong** business rule. Determinism is necessary for replicated execution; it does not prove that the rule is correct.
+
+Before implementation, write ISN invariants in testable language. Candidate invariants to refine with the domain model:
+
+1. **No unauthorized transfer:** only the required authorized institution/identity can initiate the specified operation.
+2. **No overspend:** a debit cannot reduce available balance below the permitted minimum.
+3. **Value conservation:** for a simple internal transfer with no fee or issuance/burn, total value before equals total value after; if fees or other accounting entries exist, define the balancing equation explicitly.
+4. **Atomicity:** a transfer either applies all required business-state updates or none of those business-state updates.
+5. **Replay safety:** re-submitting the same signed transaction or business instruction cannot apply the economic effect twice; distinguish chain transaction replay rules from a domain-level idempotency key.
+6. **Correct provenance:** every accepted state change is attributable to an authenticated transaction and its committed execution record.
+7. **Read-model derivation:** PostgreSQL rows are reconstructible from the designated authoritative chain source and indexing rules.
+8. **Checkpoint integrity:** the indexer checkpoint never claims progress beyond records safely processed and durably written.
+9. **Determinism:** consensus-executed business logic must not depend on local wall-clock time, random values, unordered iteration, remote API responses, or node-specific environment state unless the protocol explicitly provides a deterministic input.
+10. **Upgrade continuity:** genesis, upgrade, and migration paths preserve required invariants or reject invalid prior state with a defined recovery process.
+
+The final invariant set is **not approved yet**. Each invariant needs a plain-language definition, a formal or executable assertion, a negative test, and evidence from the selected implementation.
+
+### 6. Indexer, PostgreSQL, checkpoints, and reconciliation
+
+The indexer is a derived-data service, not another settlement engine.
+
+**Required conceptual flow:**
+
+```text
+Authoritative committed chain source
+  -> decode/normalize records
+  -> deduplicate using stable source identity
+  -> transactionally persist read-model changes
+  -> persist a checkpoint only when corresponding work is durable
+  -> publish queryable freshness/status
+  -> reconcile against authoritative source
+```
+
+Design rules:
+
+- **Idempotency:** processing the same committed source item more than once produces the same read-model result, not duplicate economic effects.
+- **Checkpointing:** record a restartable progress position (for example, block height plus any needed intra-block cursor). Define exactly when a checkpoint can advance.
+- **Atomic persistence:** where practical, update the read model and checkpoint in one database transaction so a crash cannot leave a checkpoint ahead of the rows it certifies.
+- **Gap detection:** detect skipped heights, missing transaction results, unexpected source identity collisions, decoding errors, and lag beyond the service objective.
+- **Backfill:** support replay from a known checkpoint or rebuild into a clean projection; define how schema changes and duplicate handling work.
+- **Reconciliation:** compare chain-derived expected records/aggregates with PostgreSQL projections. Record the discrepancy, source range, detection time, and repair action.
+- **Authority boundary:** repair the derived database by replaying verified authoritative data. Never “correct” chain balances merely because an indexer or SQL report disagrees.
+- **Retention dependency:** a pruned node may not retain all historical data needed for a full rebuild. Decide what archive/source retention is required and test the recovery path before setting pruning policy.
+- **Operational visibility:** expose indexer checkpoint, latest source height observed, lag, last successful reconciliation, errors, and repair state. A dashboard must not conceal stale data.
+
+**Example:** a committed 1,000-unit transfer is absent from PostgreSQL. The correct response is to identify the source height/transaction, inspect checkpoint and ingestion logs, replay or backfill the missing committed record idempotently, and reconcile again. Changing on-chain balances to match a missing SQL row is the wrong direction.
+
+### 7. Failure matrix: symptom, correct boundary, and evidence required
+
+| Failure or misleading signal | Correct interpretation | Safe response | Evidence still required |
+|---|---|---|---|
+| `CheckTx` succeeds but transaction never appears in a committed block | Admission is not commitment | Query committed source and expose a non-settled status | Client/status integration test |
+| Signature is valid but institution is not permitted to transfer | Cryptographic validity is not business authorization | Reject in authoritative application logic | Authorization negative tests |
+| Two nodes execute different outcomes | Determinism/implementation or protocol issue | Stop unsafe rollout, preserve evidence, investigate exact inputs/version | Reproducible determinism test |
+| Debit succeeds but credit fails | Business atomicity defect if partial state commits | Use correct state-transition/cache semantics and prove rollback behavior | Failure injection around each write |
+| Message fails after ante processing | Ante effects may differ from message effects | Inspect exact decorator/cache behavior; communicate fee/sequence semantics | Version-pinned test of failed-message state |
+| Indexer restarts and processes an event again | Normal at-least-once/replay possibility | Idempotent upsert/deduplication | Crash/restart replay test |
+| Checkpoint advances before SQL rows are durable | Data loss can be hidden behind false progress | Couple checkpoint and projection persistence transactionally where possible | Crash-window test |
+| PostgreSQL differs from chain state | Derived projection may be stale or wrong | Reconcile and rebuild/repair PostgreSQL from source | Deliberate missing/duplicate row experiment |
+| Historical data was pruned | Local node may not support full replay | Use a verified archive/source or documented recovery boundary | Restore/backfill exercise |
+| Upgrade/migration fails halfway or sees unexpected old state | Version/state transition risk | Follow planned halt/recovery strategy; do not improvise live migration | Upgrade from prior-state fixture |
+| Module hook order differs from assumed order | Lifecycle configuration may be wrong | Inspect application wiring and test ordering assumptions | Source trace and lifecycle test |
+| SDK/CometBFT/IBC versions are mixed from unrelated release families | Compatibility cannot be inferred from individual version numbers | Resolve and test one compatible module graph before implementation | Go module graph, build, tests, official release guidance |
+
+### 8. Why IBC is deliberately later
+
+IBC is a separate cross-chain protocol and settlement concern. It adds counterpart-chain assumptions, client and connection/channel state, packet lifecycle, acknowledgements, timeouts, refunds or compensation, relayer behavior, and cross-chain reconciliation. Those topics should not be smuggled into the first single-chain design before local settlement semantics are clear.
+
+**Current sequence decision:** learn and prove single-chain settlement first. Defer IBC implementation until:
+- the single-chain transfer state machine and invariants are reviewed;
+- authorization, atomicity, replay, failure, and upgrade behavior are tested;
+- indexer checkpoint/replay/reconciliation behavior is demonstrated;
+- a dependency family is selected and its compatibility is verified;
+- cross-chain timeout, acknowledgement, refund/recovery, and reconciliation requirements are separately specified.
+
+Do not add IBC-Go to the initial dependency graph merely as a placeholder. The v0.54.4 source study is provisional, not a final dependency decision; any later IBC-Go compatibility must be checked against official release guidance and the actual Go module graph.
+
+### 9. Source-tracing checklist and known evidence boundary
+
+For every version-specific claim, record the tag/commit, path, symbol, what the code actually does, and the limit of the conclusion. The source investigation already recorded in this chapter supports a **partial** SDK v0.54.4 path:
+
+```text
+CheckTx -> RunTx(check/recheck)
+  -> transaction decoding/validation and configured ante path
+  -> no business message execution in CheckTx mode
+
+FinalizeBlock -> internalFinalizeBlock
+  -> pre-block / begin-block
+  -> executeTxsWithExecutor -> deliverTx
+  -> RunTx(finalize) -> runMsgs
+  -> registered message handler(s)
+  -> end-block
+
+Commit
+  -> optional pre-committer
+  -> multistore commit
+  -> commit listeners
+  -> CheckTx state reset / finalize-state cleanup
+  -> configured snapshot handling
+```
+
+Related inspected source includes:
+- `baseapp/baseapp.go` and `baseapp/abci.go`
+- `baseapp/msg_service_router.go`
+- `baseapp/options.go`
+- `types/handler.go`
+- `x/auth/ante/ante.go`, `x/auth/ante/fee.go`, `x/auth/ante/sigverify.go`
+- `types/module/module.go` and the reference `simapp/app.go`
+
+The pinned links and blob SHAs are recorded in the source-investigation sections above. They are study evidence for SDK v0.54.4 only. Before claiming the full call graph, continue tracing the selected release's transaction decoding, `runMsgs`, message-service registration, store cache writes, application wiring, and the precise Commit/state-hash/snapshot interactions.
+
+### 10. Module 5 vocabulary, connected in one place
+
+- **CometBFT:** consensus and block production/ordering engine in this architecture.
+- **ABCI:** interface boundary through which consensus software interacts with application execution.
+- **Cosmos SDK:** framework for building an application-specific chain with modules, stores, transaction handling, and services.
+- **BaseApp:** core application framework implementation that coordinates important transaction and block-processing paths in the selected SDK version.
+- **Module:** a cohesive application capability and its state/logic/services/lifecycle participation.
+- **Keeper:** a controlled interface to a module's state and capabilities; a useful boundary for dependencies and invariant enforcement.
+- **Message / message service:** typed requested state transition and its registered handling path.
+- **AnteHandler:** configured transaction-level processing chain that runs before business message execution in the relevant path.
+- **CheckTx:** admission-related processing, not a final settlement receipt.
+- **State store / multistore:** persistent application state mechanisms and their coordinated commitment.
+- **Cache/branch:** staged state used to control when updates are written through; exact behavior depends on the SDK path.
+- **Gas:** bounded execution/resource accounting under chain rules.
+- **Event:** emitted metadata for indexing/observability; it should not be treated as stronger authority than committed source data.
+- **Transaction hash:** identifier/fingerprint of transaction bytes under chain rules.
+- **Application hash/state commitment:** commitment to application state under the chain's state-encoding and commitment rules.
+- **Genesis:** initial chain/application state configuration.
+- **Module migration:** versioned transformation of persisted module state.
+- **Snapshot:** a state/recovery/bootstrap artifact under a configured mechanism.
+- **Pruning:** removal of selected local historical data, not rollback of settlement.
+- **Archive:** history-retaining node/source intended for historical queries or recovery, subject to its actual retention and indexing.
+- **Indexer:** service that transforms committed source data into a query-friendly projection.
+- **Checkpoint:** durable indication of the source position successfully processed under defined persistence rules.
+- **Idempotency:** repeating an operation has no additional unintended effect.
+- **Reconciliation:** comparison of authoritative and derived records to detect and safely repair discrepancies.
+- **IBC:** protocol family for cross-chain communication; explicitly deferred from the initial single-chain learning/implementation stage.
+
+### 11. Interview mastery: answer these without memorized slogans
+
+1. Trace a signed transfer from client bytes through admission, consensus, application execution, commit, indexing, and reconciliation.
+2. Explain why valid signatures, successful CheckTx, block inclusion, message execution, commitment, and read-model visibility are different facts.
+3. Explain how a transfer can be deterministic but violate a business invariant.
+4. Explain how module construction, message-service registration, lifecycle ordering, and AnteHandler attachment differ.
+5. Explain the difference between transaction hash and application state hash.
+6. Describe the safe response when PostgreSQL misses a committed transfer.
+7. Explain idempotent indexing and why checkpoint persistence order matters.
+8. Explain the operational consequences of pruning and the need for archive/rebuild evidence.
+9. Describe how genesis and module migrations can violate invariants if not tested.
+10. Explain why IBC is deferred and list the new failure/recovery cases it introduces.
+11. Explain what the current v0.54.4 source investigation proves and what it does not prove.
+12. Explain why no SDK/CometBFT baseline should be called final before compatibility, build, and tests are completed.
+
+Use the earlier Part VIII questions for the detailed answer outlines; these prompts are the integrated end-to-end oral review.
+
+### 12. End-to-end mastery gate
+
+Mark each item complete only when its evidence exists. A correct verbal answer alone does not prove runtime behavior.
+
+- [ ] Draw and explain the end-to-end architecture and all authority boundaries.
+- [ ] Trace one transaction in the selected SDK release from entry point to message handler and commit using exact source paths/symbols.
+- [ ] Explain signature, authorization, CheckTx, execution, commitment, indexing, and reconciliation separately.
+- [ ] Specify and review the final ISN settlement invariants.
+- [ ] Demonstrate atomic debit/credit behavior, including failure injection.
+- [ ] Demonstrate duplicate transaction/replay handling and its exact economic effect.
+- [ ] Demonstrate indexer idempotency, crash/restart replay, checkpoint correctness, missing-record repair, and reconciliation.
+- [ ] Demonstrate genesis/export and an upgrade/migration path using fixtures for the selected release.
+- [ ] Document pruning/archive assumptions and successfully exercise the chosen recovery path.
+- [ ] Select a compatible SDK/CometBFT toolchain and record the official evidence, resolved module graph, build, and tests.
+- [ ] Run a reproducible lab and record exact commands, environment, outputs, failures, and fixes.
+- [ ] Answer the interview review in the learner's own words and link the evidence.
+
+**Current honest status:** the conceptual chapter and two source investigations exist; some short conversational checks have been answered correctly. The full source call graph, approved dependency baseline, runnable lab, build/test evidence, failure experiments, and implemented ISN behavior remain open. Do not mark Module 5 complete until the relevant boxes have real evidence.
+
+### 13. How this chapter relates to earlier modules
+
+- **Module 1 — Distributed systems and deterministic state machines:** explains why replicas need deterministic execution and why safety/liveness matter.
+- **Module 2 — Consensus, fault models, and finality:** explains the ordering/fault assumptions behind agreed blocks and why consensus is not business validation.
+- **Module 3 — Transactions, application state, and settlement invariants:** supplies the transaction lifecycle and business correctness rules used by the settlement handler.
+- **Module 4 — Hashes, keys, signatures, and transaction identity:** supplies the cryptographic and identity foundation for encoded/signed transactions.
+- **Module 5 — Cosmos architecture and execution internals:** connects those foundations to the SDK/CometBFT application structure, module wiring, state commit, operational lifecycle, indexer, and reconciliation.
+
+**Learning rule:** finish this integrated chapter and its evidence gates before opening the next module file. Do not skip unresolved items just because the conceptual quiz sequence has reached the end.
