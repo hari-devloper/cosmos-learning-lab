@@ -794,6 +794,8 @@ This summarizes the inspected SimApp example. It is not an ISN implementation an
 
 ## End-to-end integration: how every Module 5 concept connects
 
+**Companion diagram:** [Open the dedicated end-to-end Mermaid architecture map](../diagrams/MODULE-05-end-to-end-cosmos-architecture.mmd). Use it alongside this chapter; the chapter provides the detailed explanation and evidence boundaries, while the diagram shows how the components connect.
+
 - **Integration ID:** COSMOS-ARCH-001-E2E
 - **Updated:** 2026-10-25
 - **Purpose:** One connected narrative for the entire module. Read this after the earlier deep-dive sections; it ties the individual concepts together instead of treating them as isolated definitions.
