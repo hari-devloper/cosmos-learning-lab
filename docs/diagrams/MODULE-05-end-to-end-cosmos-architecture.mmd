@@ -1,0 +1,116 @@
+flowchart TB
+  %% Module 5 integrated reference diagram.
+  %% Conceptual architecture, not a complete version-specific call graph or deployed ISN implementation.
+
+  subgraph CLIENT["1. Institution and client boundary"]
+    A["Institution / Bank Portal"]
+    B["API: validate request shape<br/>build transaction"]
+    C["Encode transaction bytes<br/>sign required bytes"]
+    A --> B --> C
+  end
+
+  subgraph TX["2. Transaction admission and consensus"]
+    D["Node receives transaction"]
+    E["CheckTx / recheck<br/>admission and mempool policy"]
+    F["Proposal / block ordering"]
+    G["CometBFT consensus<br/>validators agree on ordered block"]
+    D --> E
+    E --> F
+    F --> G
+  end
+
+  subgraph APP["3. Deterministic application execution"]
+    H["ABCI boundary<br/>consensus engine ↔ application"]
+    I["FinalizeBlock / block execution"]
+    J["Pre-block / begin-block hooks<br/>when configured"]
+    K["BaseApp transaction processing"]
+    L["AnteHandler chain<br/>signature, sequence/replay,<br/>fee and gas policy as configured"]
+    M["Message service router<br/>message type → registered handler"]
+    N["Settlement module handler<br/>institution authorization + domain rules"]
+    O["Keepers and state access<br/>enforce module boundaries"]
+    P["Staged state / cache branches<br/>atomic business-state transition"]
+    Q["End-block hooks<br/>when configured"]
+    H --> I --> J --> K --> L --> M --> N --> O --> P --> Q
+  end
+
+  subgraph COMMIT["4. State commitment"]
+    R["Application stores / multistore"]
+    S["Commit path<br/>commit state and run configured hooks"]
+    T["Application state commitment / hash"]
+    U["Committed blocks and transaction results<br/>authoritative chain source"]
+    R --> S --> T
+    S --> U
+  end
+
+  subgraph READ["5. Derived read model and reconciliation"]
+    V["Indexer consumes committed source"]
+    W["Decode and normalize records"]
+    X["Deduplicate / idempotent upsert"]
+    Y[("PostgreSQL read model")]
+    Z["Durable checkpoint<br/>advance only after safe persistence"]
+    AA["Explorer, reports, institution queries"]
+    AB["Reconciliation<br/>compare source facts with projection"]
+    AC["Investigate discrepancy<br/>replay, backfill, or rebuild projection"]
+    V --> W --> X --> Y
+    X --> Z
+    Y --> AA
+    U --> V
+    U --> AB
+    Y --> AB
+    AB --> AC
+    AC --> V
+  end
+
+  subgraph APPWIRING["6. Application construction and wiring (startup path)"]
+    AD["Construct stores, keepers,<br/>module instances and dependencies"]
+    AE["Register modules with manager"]
+    AF["Configure pre/begin/end-block<br/>and genesis hook ordering"]
+    AG["Register message/query services<br/>with configurator and routers"]
+    AH["Construct AnteHandler chain<br/>and attach to BaseApp"]
+    AI["Load/init genesis state<br/>then start application"]
+    AD --> AE --> AF
+    AE --> AG
+    AD --> AH
+    AF --> AI
+    AG --> AI
+    AH --> AI
+  end
+
+  subgraph OPS["7. Chain state lifecycle and operations"]
+    AJ["InitGenesis<br/>initialize state from genesis"]
+    AK["ExportGenesis<br/>export supported module state"]
+    AL["Upgrade plan and module migrations<br/>versioned state transition"]
+    AM["Snapshots<br/>restore/bootstrap path"]
+    AN["Pruning policy<br/>remove selected local history"]
+    AO["Archive node / retained source<br/>historical query and rebuild support"]
+    AJ -. "initial state" .-> AI
+    AI -. "runtime state" .-> AL
+    AI -. "configured recovery" .-> AM
+    AI -. "retention policy" .-> AN
+    AN -. "may limit local replay" .-> AO
+    AI -. "supported export workflow" .-> AK
+  end
+
+  subgraph BOUNDARIES["8. Explicit authority and scope boundaries"]
+    AP["Settlement authority:<br/>committed chain application state"]
+    AQ["Derived data only:<br/>PostgreSQL, dashboards and reports"]
+    AR["IBC / cross-chain settlement<br/>DEFERRED until single-chain invariants,<br/>failure tests and recovery are proven"]
+    AS["Separate status facts:<br/>submitted ≠ CheckTx accepted ≠ included<br/>≠ execution successful ≠ committed<br/>≠ indexed and reconciled"]
+    AP --- U
+    AQ --- Y
+    U -. "feeds, does not delegate authority" .-> Y
+    AR -. "later stage; not an initial dependency" .-> APP
+    AS -. "status model must preserve distinctions" .-> AA
+  end
+
+  C --> D
+  G --> H
+  Q --> R
+  P --> R
+
+  classDef authority fill:#e7f5e8,stroke:#26733b,color:#102d16,stroke-width:2px;
+  classDef derived fill:#e8f0fe,stroke:#315ea8,color:#10264d;
+  classDef caution fill:#fff1d6,stroke:#a45b00,color:#4a2900;
+  class AP,U,S,T authority;
+  class V,W,X,Y,Z,AA,AB,AC derived;
+  class E,AR,AS caution;
