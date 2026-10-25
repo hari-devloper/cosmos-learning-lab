@@ -1,129 +1,53 @@
 flowchart TB
-  %% COSMOS-ARCH-001 — organized component architecture for Module 5.
-  %% Official learning references:
+  %% COSMOS-ARCH-001 — simplified, transaction-centered component architecture.
+  %% Rendered companion: MODULE-05-diagram-preview.md
+  %% Official references:
   %% https://github.com/cosmos/cosmos-sdk-docs/blob/main/docs/learn/beginner/00-app-anatomy.md
   %% https://github.com/cosmos/cosmos-sdk-docs/blob/main/docs/learn/advanced/00-baseapp.md
   %% https://github.com/cosmos/cosmos-sdk-docs/blob/main/docs/learn/advanced/04-store.md
-  %% https://github.com/cosmos/cosmos-sdk-docs/blob/main/docs/learn/concepts/lifecycle.md
-  %% Conceptual component map; exact types and call paths depend on the selected SDK/CometBFT release.
 
-  subgraph RUNTIME["1. One node runtime — the daemon starts both sides"]
-    direction LR
-    subgraph CONSENSUS["CometBFT: networking + consensus"]
-      direction TB
-      P2P["P2P networking<br/>peers, gossip"]
-      MEMPOOL["Mempool<br/>candidate transactions"]
-      CONS["Consensus engine<br/>proposals, votes, block order"]
-      BLOCKS[("Block store<br/>committed blocks")]
-      P2P --> MEMPOOL --> CONS --> BLOCKS
-    end
+  CLIENT["1. CLIENTS<br/>Institution service · CLI · Wallet"]
+  COMET["2. COMETBFT NODE<br/>P2P · Mempool · Proposals · Consensus"]
+  ABCI["ABCI / ABCI++ boundary"]
+  BASE["3. COSMOS SDK — BASEAPP<br/>Transaction execution · Gas · Context · Routing"]
+  ANTE["AnteHandler<br/>Transaction-level checks"]
+  ROUTER["Message router"]
+  MSG["ISN MsgServer<br/>Settlement rules · Authorization · Invariants"]
+  SDKMOD["Enabled SDK modules<br/>Auth · Bank · Governance · Upgrade"]
+  KEEP["Keepers<br/>Controlled access to module state"]
+  STORE[("4. APPLICATION STATE<br/>CommitMultiStore + module KV stores")]
+  COMMIT["Commit successful state changes"]
+  APPHASH["Application state commitment / app hash"]
+  BLOCKS[("Committed blocks and transaction results")]
+  INDEXER["5. DERIVED READ SIDE<br/>Indexer · Deduplication · Checkpoint"]
+  PG[("PostgreSQL<br/>Queryable projection")]
+  UI["Explorer · Bank Portal · Treasury / Ops Consoles"]
+  RECON["Reconciliation<br/>Detect gaps; repair projection from authoritative data"]
+  WIRING["Application assembly<br/>cmd / app constructor · codecs · Module Manager<br/>registers services, stores, dependencies, hook order"]
 
-    ABCI["ABCI / ABCI++<br/>request-response boundary"]
+  CLIENT -->|"signed transaction"| COMET
+  COMET <--> ABCI
+  ABCI <--> BASE
+  BASE --> ANTE --> ROUTER
+  ROUTER --> MSG
+  ROUTER --> SDKMOD
+  MSG --> KEEP
+  SDKMOD --> KEEP
+  KEEP --> STORE --> COMMIT --> APPHASH
+  APPHASH -. "reported to consensus protocol" .-> COMET
+  COMET --> BLOCKS --> INDEXER --> PG --> UI
+  BLOCKS --> RECON
+  PG --> RECON
+  WIRING -. "constructs and configures" .-> BASE
+  WIRING -. "registers modules/services" .-> ROUTER
 
-    subgraph SDK["Cosmos SDK application: deterministic state machine"]
-      direction TB
-      BASE["BaseApp<br/>ABCI implementation + execution core"]
-      ROUTERS["Service routers<br/>Msg router + query router"]
-      BASE --> ROUTERS
-    end
-
-    CONS <-->|"ABCI calls"| ABCI
-    ABCI <--> BASE
-  end
-
-  subgraph APPBUILD["2. How the SDK application is assembled"]
-    direction LR
-    CMD["cmd/<br/>daemon entry point"]
-    APPGO["app.go / application constructor<br/>creates and wires components"]
-    CODEC["Protobuf codec + interface registry<br/>encode/decode typed data"]
-    MANAGER["Module Manager<br/>module lifecycle and hook ordering"]
-    CMD --> APPGO
-    APPGO --> CODEC
-    APPGO --> MANAGER
-    APPGO -. "constructs" .-> BASE
-    MANAGER -. "registers Msg / Query services" .-> ROUTERS
-  end
-
-  subgraph MODULES["3. Inside modules — each module owns a domain"]
-    direction LR
-    subgraph STANDARD["Reusable SDK modules (when enabled)"]
-      direction TB
-      AUTH["x/auth<br/>accounts + transaction support"]
-      BANK["x/bank<br/>balances + coin transfers"]
-      STAKING["x/staking<br/>validator/delegation state"]
-      GOV["x/gov<br/>on-chain governance"]
-      UPGRADE["x/upgrade<br/>coordinated upgrades"]
-    end
-
-    subgraph CUSTOM["Application-specific module"]
-      direction TB
-      MSG["MsgServer<br/>validate and execute state transition"]
-      QUERY["QueryServer<br/>serve module-owned reads"]
-      KEEP["Keeper<br/>controlled access to module state"]
-      MSG --> KEEP
-      QUERY --> KEEP
-    end
-
-    ROUTERS -->|"transaction messages"| MSG
-    ROUTERS -->|"query requests"| QUERY
-    ROUTERS -. "routes to enabled modules" .-> AUTH
-    ROUTERS -.-> BANK
-    MANAGER -. "lifecycle hooks" .-> STAKING
-    MANAGER -.-> GOV
-    MANAGER -.-> UPGRADE
-  end
-
-  subgraph STATE["4. How application state is stored and committed"]
-    direction LR
-    MULTI[("Root CommitMultiStore<br/>contains module KV stores")]
-    CACHE["Cache branches / volatile execution state<br/>isolate tentative changes"]
-    COMMIT["Commit application state"]
-    HASH["Application hash / state commitment"]
-    KEEP -->|"keeper uses its store key"| MULTI
-    MULTI -->|"branch for execution"| CACHE
-    CACHE --> COMMIT --> HASH
-    HASH -. "commitment reported through chain protocol" .-> CONS
-  end
-
-  subgraph OUTSIDE["5. Read side and operator lifecycle"]
-    direction LR
-    CLIENT["CLI / wallet / institution service"]
-    API["RPC, REST, gRPC"]
-    INDEXER["Indexer<br/>consume committed chain data"]
-    PG[("PostgreSQL<br/>derived read model")]
-    UI["Explorer / bank portal / reports"]
-    CLIENT -->|"submit signed transaction"| MEMPOOL
-    API -->|"queries"| ROUTERS
-    BLOCKS --> INDEXER --> PG --> UI
-    HASH --> INDEXER
-  end
-
-  subgraph OPS["6. Chain lifecycle responsibilities — not transaction steps"]
-    direction LR
-    GENESIS["Genesis<br/>initialize first state"]
-    UPGRADEPATH["Upgrade plan + module migrations"]
-    SNAPSHOT["Snapshots / state sync<br/>bootstrap or recovery"]
-    PRUNE["Pruning<br/>local history retention"]
-    ARCHIVE["Archive / retained history<br/>historical queries and replay"]
-    GENESIS -. "initializes" .-> APPGO
-    UPGRADEPATH -. "versioned transition" .-> MANAGER
-    SNAPSHOT -. "restore/bootstrap" .-> BLOCKS
-    PRUNE -. "retention policy" .-> BLOCKS
-    ARCHIVE -. "historical source" .-> INDEXER
-  end
-
-  RULEA["Authority: committed application state is canonical."]
-  RULEB["PostgreSQL and UI are derived projections; reconcile/rebuild them from chain data."]
-  RULEC["IBC and cross-chain settlement are deferred until single-chain rules and recovery are proven."]
-  HASH --- RULEA
-  PG --- RULEB
-  MSG --- RULEC
-
-  classDef consensus fill:#e8efff,stroke:#315ea8,color:#122b50,stroke-width:2px;
-  classDef app fill:#e8f5eb,stroke:#287443,color:#12351d,stroke-width:2px;
+  classDef protocol fill:#e8efff,stroke:#315ea8,color:#122b50,stroke-width:2px;
+  classDef application fill:#e7f5eb,stroke:#287443,color:#12351d,stroke-width:2px;
+  classDef storage fill:#fff2d9,stroke:#a45d00,color:#492900,stroke-width:2px;
   classDef derived fill:#f0eaff,stroke:#7550a1,color:#2e1a4a;
-  classDef caution fill:#fff2d9,stroke:#a45d00,color:#492900;
-  class CONS,ABCI,BASE,ROUTERS consensus;
-  class MSG,QUERY,KEEP,MODSTORE,MULTI,CACHE,COMMIT,HASH app;
-  class INDEXER,PG,UI derived;
-  class RULEA,RULEB,RULEC caution;
+  classDef assembly fill:#f3f4f6,stroke:#687386,color:#202938;
+  class COMET,ABCI protocol;
+  class BASE,ANTE,ROUTER,MSG,SDKMOD,KEEP application;
+  class STORE,COMMIT,APPHASH,BLOCKS storage;
+  class INDEXER,PG,UI,RECON derived;
+  class WIRING assembly;
