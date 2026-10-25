@@ -14,7 +14,8 @@ flowchart TB
   ROUTER["Message router"]
   MSG["ISN MsgServer<br/>Settlement rules · Authorization · Invariants"]
   SDKMOD["Enabled SDK modules<br/>Auth · Bank · Governance · Upgrade"]
-  KEEP["Keepers<br/>Controlled access to module state"]
+  ISNKEEP["ISN Keeper<br/>Settlement state access and invariant-preserving writes"]
+  SDKKEEP["Enabled SDK module keepers<br/>Each module accesses its own configured state"]
   STORE[("4. APPLICATION STATE<br/>CommitMultiStore + module KV stores")]
   COMMIT["Commit successful state changes"]
   APPHASH["Application state commitment / app hash"]
@@ -31,9 +32,11 @@ flowchart TB
   BASE --> ANTE --> ROUTER
   ROUTER --> MSG
   ROUTER --> SDKMOD
-  MSG --> KEEP
-  SDKMOD --> KEEP
-  KEEP --> STORE --> COMMIT --> APPHASH
+  MSG --> ISNKEEP
+  SDKMOD --> SDKKEEP
+  ISNKEEP --> STORE
+  SDKKEEP --> STORE
+  STORE --> COMMIT --> APPHASH
   APPHASH -. "reported to consensus protocol" .-> COMET
   COMET --> BLOCKS --> INDEXER --> PG --> UI
   BLOCKS --> RECON
@@ -47,7 +50,7 @@ flowchart TB
   classDef derived fill:#f0eaff,stroke:#7550a1,color:#2e1a4a;
   classDef assembly fill:#f3f4f6,stroke:#687386,color:#202938;
   class COMET,ABCI protocol;
-  class BASE,ANTE,ROUTER,MSG,SDKMOD,KEEP application;
+  class BASE,ANTE,ROUTER,MSG,SDKMOD,ISNKEEP,SDKKEEP application;
   class STORE,COMMIT,APPHASH,BLOCKS storage;
   class INDEXER,PG,UI,RECON derived;
   class WIRING assembly;
