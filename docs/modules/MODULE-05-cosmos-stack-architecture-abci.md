@@ -794,7 +794,7 @@ This summarizes the inspected SimApp example. It is not an ISN implementation an
 
 ## End-to-end integration: how every Module 5 concept connects
 
-**Companion diagram:** [Open the dedicated end-to-end Mermaid architecture map](../diagrams/MODULE-05-end-to-end-cosmos-architecture.mmd). Use it alongside this chapter; the chapter provides the detailed explanation and evidence boundaries, while the diagram shows how the components connect.
+**Companion diagrams:** [Open the simplified end-to-end architecture overview](../diagrams/MODULE-05-end-to-end-cosmos-architecture.mmd) for the main system boundaries, then use the [focused transaction-execution lifecycle](../diagrams/MODULE-05-transaction-execution-flow.mmd) to study admission, execution, failure handling, and commit. These diagrams are conceptual aids; verify exact symbols and call order against the approved SDK/CometBFT versions before treating them as implementation evidence.
 
 - **Integration ID:** COSMOS-ARCH-001-E2E
 - **Updated:** 2026-10-25
