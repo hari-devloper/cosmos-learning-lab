@@ -1148,6 +1148,67 @@ C. Correct, as long as PostgreSQL is kept private.
 
 **Correct answer: B.** Appchain sovereignty gives design control; it does not grant security or confidentiality automatically.
 
+
+**Learner check recorded:** the learner selected A. This is incorrect; B is correct. The appchain provides control, not automatic confidentiality or stronger security. This is a conceptual learning record, not a runtime test.
+
+### Concept 44 — The IBC boundary: why we defer cross-chain transfers
+
+**Plain-English model:** IBC (Inter-Blockchain Communication) is a protocol family that lets separate blockchain networks exchange authenticated messages. A cross-chain transfer is not just a local database update: two independently progressing chains, their client/consensus verification, packet lifecycle, and possible delays or failures must be handled.
+
+#### Single-chain settlement versus cross-chain settlement
+
+For a single-chain ISN transfer, one chain executes the settlement rule and commits the resulting application state. The immediate correctness questions include authorization, sufficient funds, atomic debit/credit, replay handling, deterministic execution, and recovery/indexing.
+
+With a cross-chain transfer, we must additionally reason about:
+- whether the destination chain has received and processed the packet;
+- acknowledgements, timeouts, and proof verification;
+- whether a source-side transfer or escrow is refunded or released correctly;
+- duplicate delivery and idempotent packet handling;
+- both chains pausing, upgrading, or becoming temporarily unavailable;
+- relayer delays or failure;
+- client/consensus state becoming expired or needing an update;
+- reconciliation across two different authoritative ledgers, without treating either chain's local state as a substitute for the other.
+
+**Important:** a timeout does not mean “undo everything everywhere immediately.” The exact protocol and application behavior depends on the transfer design and IBC application semantics. Refund/unescrow behavior must be defined and tested against the selected versions and packet state, not improvised from a generic slogan.
+
+#### Why ISN defers IBC for now
+
+The learning project first needs evidence that single-chain settlement invariants are explicit and correct, failed transfers have understood effects, duplicate/replay handling is safe, the indexer can recover from crashes, reconciliation works, and upgrades/recovery have been exercised. Adding IBC before those foundations are proven multiplies the number of failure paths and makes it harder to isolate bugs.
+
+Deferring IBC is a sequencing decision, not a claim that IBC is unsuitable. Once the single-chain design is validated, we can separately design the cross-chain threat model, packet lifecycle, trusted client assumptions, escrow/refund rules, timeout recovery, and cross-chain reconciliation.
+
+#### Conceptual boundary diagram
+
+```mermaid
+flowchart LR
+    subgraph A["ISN chain A"]
+      SRC[Source institution] --> RULES[Local authorization and settlement rules]
+      RULES --> STATEA[Committed source-chain state]
+      STATEA --> PACKET[IBC packet lifecycle]
+    end
+    PACKET --> PROOF[Verified packet / proof and client state]
+    PROOF --> DEST[Destination-chain IBC application]
+    DEST --> RULESB[Destination-chain validation]
+    RULESB --> STATEB[Committed destination-chain state]
+    PACKET -. timeout / error path .-> RECOVER[Protocol-defined source recovery]
+    STATEB --> INDEXB[Destination read model]
+    STATEA --> INDEXA[Source read model]
+    INDEXA --> CROSS[Cross-chain reconciliation evidence]
+    INDEXB --> CROSS
+```
+
+This is an illustrative boundary diagram, not a claim that ISN has implemented IBC. Each chain retains its own authoritative state. Cross-chain reconciliation compares protocol events and application outcomes; it must not casually rewrite either chain's committed state.
+
+#### Quick check
+
+An ISN cross-chain transfer has not been acknowledged by the destination yet. Which statement is safest?
+
+A. Assume the destination transfer succeeded and update its PostgreSQL balance manually.
+B. Treat the transfer as a protocol-lifecycle case: inspect packet/acknowledgement/timeout and proof state, then apply only the recovery action defined by the chosen IBC application and version.
+C. Immediately credit the source institution and destination institution to avoid delays.
+
+**Correct answer: B.** Until the protocol state is established, do not invent success or refund outcomes. Verify the precise packet state and apply the specified protocol/application behavior.
+
 ### 11. Interview mastery: answer these without memorized slogans
 
 1. Trace a signed transfer from client bytes through admission, consensus, application execution, commit, indexing, and reconciliation.
