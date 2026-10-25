@@ -25,10 +25,11 @@ Do not skip gates. Do not invent outputs or silently change the stack or use cas
 - Inspect the current cosmos-learning-lab checkout and its existing docs.
 - Verify OS/WSL environment, Go, Git, protobuf tooling, Node/frontend prerequisites, and installed Cosmos example.
 - Record exact versions and distinguish installed facts from planned requirements.
-- Review the compatibility draft; verify official release metadata and dependency compatibility before pinning versions.
-- Preserve the official cosmos/example run as a reference experiment only; do not clone it blindly as our own implementation.
+- Use the selected target pair: Cosmos SDK `v0.55.0` and CometBFT `v0.40.0`, based on the dependency pair inspected in the existing official example.
+- Preserve the official cosmos/example run as a reference only; implement TeamTask Chain in this repository rather than copying the example.
+- Validate dependency resolution, build, tests, and local-chain startup during the real implementation; do not create a separate disposable compatibility experiment.
 
-**Exit gate:** reproducible environment audit, known repository status, reviewed compatibility decision, and a written first-milestone checklist.
+**Exit gate:** begin the app skeleton with the selected versions, and record actual build/test evidence as it becomes available. Do not claim validation before it runs.
 
 ## Phase 1 — Cosmos application foundations
 
