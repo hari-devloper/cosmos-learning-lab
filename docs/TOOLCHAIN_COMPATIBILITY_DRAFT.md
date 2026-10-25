@@ -1,6 +1,6 @@
 # Cosmos Toolchain Compatibility — Draft
 
-Status: **Evidence collected; no final dependency lock approved.**
+Status: **Project target selected; validation will happen during the real implementation build and tests.**
 
 Research date: 2026-10-24. This is a compatibility investigation, not a claim that a complete application build has passed.
 
@@ -59,15 +59,22 @@ After selecting a candidate baseline:
 8. Review the dependency decision and receive explicit approval before using it in the product repository.
 9. Later, when IBC becomes in-scope, verify the compatible IBC-Go release family and add the necessary tests in a separate decision.
 
-## Learner decision — preferred candidate, validation pending
+## Project version decision — TeamTask Chain
 
-The learner chose the Cosmos SDK **v0.54.x family**, with **v0.54.4 / CometBFT v0.39.4** as the first candidate to validate, because the inspected dependency declarations appear more aligned with the intended later IBC compatibility path than the SDK v0.55.0 family. This is a scope and validation decision, not a claim that v0.54.4 is the newest or most mature release available as of the research date.
+The learner has chosen to use the versions already exercised in the official Cosmos example reference:
 
-**Status: candidate selected; not yet approved as the project baseline.** Before approval, verify current official release/maintenance status and upgrade notes, inspect the exact tagged module graph, create a disposable minimal application, and run the documented build and tests. Do not add IBC-Go or CosmWasm to the initial dependency graph.
+- **Cosmos SDK `v0.55.0`**
+- **CometBFT `v0.40.0`**
+
+The SDK `v0.55.0` module metadata declares CometBFT `v0.40.0`, so this is a coherent starting pair based on the evidence inspected. This is the project's selected target, not a guarantee that these are the newest releases available globally at every later date. The example repository remains a reference only; TeamTask Chain will be implemented in `cosmos-learning-lab`.
+
+The earlier discussion of SDK `v0.54.4` / CometBFT `v0.39.4` was a candidate analysis and is superseded by this decision. Do not switch back to that pair unless a concrete build or compatibility issue justifies reconsideration.
+
+**Validation policy:** validate dependency resolution, compilation, tests, and local-chain startup as part of the real TeamTask Chain implementation. Do not create another disposable compatibility experiment. Record actual command output and failures; never report validation as passed until it has run. Keep IBC-Go and CosmWasm out of the initial dependency graph and evaluate their compatible release families when those roadmap milestones become active.
 
 ## Decision gate
 
-No dependency lock, starter application, or implementation work is approved by this draft. The next decision is to choose a candidate SDK/CometBFT release family for the **single-chain learning scope**, verify its source and module graph, and validate it in a disposable application. IBC-Go and CosmWasm are not part of the initial dependency graph unless the user explicitly reopens that scope.
+**Version selection is decided; implementation validation is pending.** Proceed to the TeamTask Chain application skeleton using SDK `v0.55.0` and CometBFT `v0.40.0`. Validate incrementally during the actual build and tests, and update this record with observed evidence.
 
 ## Learner-run tag and Go metadata check — 2026-10-25
 
