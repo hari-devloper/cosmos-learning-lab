@@ -53,6 +53,12 @@ After selecting a candidate baseline:
 8. Review the dependency decision and receive explicit approval before using it in the product repository.
 9. Later, when IBC becomes in-scope, verify the compatible IBC-Go release family and add the necessary tests in a separate decision.
 
+## Learner decision — preferred candidate, validation pending
+
+The learner chose the Cosmos SDK **v0.54.x family**, with **v0.54.4 / CometBFT v0.39.4** as the first candidate to validate, because the inspected dependency declarations appear more aligned with the intended later IBC compatibility path than the SDK v0.55.0 family. This is a scope and validation decision, not a claim that v0.54.4 is the newest or most mature release available as of the research date.
+
+**Status: candidate selected; not yet approved as the project baseline.** Before approval, verify current official release/maintenance status and upgrade notes, inspect the exact tagged module graph, create a disposable minimal application, and run the documented build and tests. Do not add IBC-Go or CosmWasm to the initial dependency graph.
+
 ## Decision gate
 
 No dependency lock, starter application, or implementation work is approved by this draft. The next decision is to choose a candidate SDK/CometBFT release family for the **single-chain learning scope**, verify its source and module graph, and validate it in a disposable application. IBC-Go and CosmWasm are not part of the initial dependency graph unless the user explicitly reopens that scope.
