@@ -34,11 +34,18 @@ A milestone is complete only when its code or lab works, the learner can explain
 - docs/modules/ — existing foundational learning chapters
 - docs/diagrams/ — editable diagrams and previews
 - docs/ENVIRONMENT_AUDIT.md — environment findings
-- docs/TOOLCHAIN_COMPATIBILITY_DRAFT.md — provisional compatibility research; not an approved dependency lock
+- docs/TOOLCHAIN_COMPATIBILITY_DRAFT.md — selected SDK/CometBFT target and implementation validation evidence
 - progress/ — milestone and mastery tracking
 
 Create implementation directories only when a milestone needs them. Do not scaffold the entire system in advance.
 
+## Version target
+
+- Cosmos SDK `v0.55.0`
+- CometBFT `v0.40.0`
+
+This pair matches the dependency versions inspected in the existing official Cosmos example reference. The example is a reference only; TeamTask Chain is implemented here. The selected versions still need to pass the actual project's build, tests, and local-chain smoke test.
+
 ## Current project status
 
-**Planning reset; implementation gate not yet passed.** The existing foundational chapters remain reference material, not proof that the corresponding concepts are mastered. First verify the current local environment and repository state, review the project plan, and approve the dependency baseline. Then begin Milestone 1. No application implementation should be claimed complete before it is built and verified.
+**Version decision made; implementation is next.** The existing foundational chapters remain reference material, not proof that the corresponding concepts are mastered. Build the TeamTask Chain application skeleton against the selected versions and record real verification results. Do not claim an implementation or test is complete before it has been run and verified.
