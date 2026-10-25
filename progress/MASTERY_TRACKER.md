@@ -1,83 +1,126 @@
-# Mastery Tracker
+# Mastery Tracker — TeamTask Chain
 
-This tracker records evidence, not intentions. Mark an item complete only after the learner has demonstrated the relevant understanding and reproducible lab.
+This tracker records demonstrated understanding and reproducible evidence, not intentions. Do not mark an item complete just because documentation was read or code compiled.
 
 ## Status key
 
 - [ ] Not started
-- [~] In progress (include evidence and remaining gaps)
-- [x] Complete (must include evidence link or a concise evidence record)
+- [~] In progress; include evidence and remaining gaps
+- [x] Complete; include evidence and a mastery demonstration
 
-## Stage 0 — Environment and compatibility
+## Project reset status
 
-- [x] Record initial WSL/toolchain observations — `docs/ENVIRONMENT_AUDIT.md`
-- [x] Record official-tag dependency evidence and compatibility questions — `docs/TOOLCHAIN_COMPATIBILITY_DRAFT.md`
-- [ ] Confirm VS Code integrated terminal is connected to WSL and all required tools resolve to Linux binaries
-- [ ] Decide initial Cosmos SDK release-family learning path
-- [ ] Validate selected dependency graph in a disposable minimal application
-- [ ] Run and record clean build/test evidence for the selected baseline
+The learning project is now TeamTask Chain. The Institutional Settlement Network is separate. No Codex is used in this repository. Existing foundational modules remain useful study material, but they do not automatically satisfy a TeamTask milestone or prove mastery.
 
-## Stage 1 — Distributed systems foundations
+## Phase 0 — Repository and environment baseline
 
-- [ ] Deterministic state machines
-- [ ] Replicated state and consensus
-- [ ] Transaction ordering and finality
-- [ ] Safety, liveness, and fault assumptions
-- [ ] Cryptographic keys, signatures, hashes, and encoding
+- [x] Initial WSL/toolchain observations recorded — docs/ENVIRONMENT_AUDIT.md
+- [x] Provisional dependency evidence and open compatibility questions recorded — docs/TOOLCHAIN_COMPATIBILITY_DRAFT.md
+- [ ] Inspect local checkout status and current directory structure
+- [ ] Verify tool versions directly in the working WSL terminal
+- [ ] Review dependency compatibility against official release metadata
+- [ ] Approve the initial version baseline only after a clean validation build/test
+- [ ] Write the exact Phase 1 commands and expected observations
 
-## Stage 2 — Cosmos stack architecture
+## Fixed milestone tracker
 
-- [ ] Cosmos SDK application and module boundaries
-- [ ] CometBFT / ABCI boundary
-- [ ] Transaction submission and execution lifecycle
-- [ ] Ante processing, messages, signers, and authorization
-- [ ] State stores, caches, events, and queries
-- [ ] Genesis, configuration, upgrades, and local networks
+### 1. Cosmos application foundations
+- [ ] Explain SDK, CometBFT, ABCI/application boundary, deterministic state
+- [ ] Verify app wiring, genesis/configuration, and node startup source paths
+- [ ] Start and inspect the local chain from documented steps
+- [ ] Pass explanation and source-tracing checkpoint
 
+### 2. Transaction lifecycle
+- [ ] Explain messages, protobuf, signer, signature, encoding, fees and gas
+- [ ] Trace submission through execution and committed state
+- [ ] Verify transaction result, events, query, and error behavior
+- [ ] Complete invalid-input/failure experiment
 
-## Learner evidence log
+### 3. TeamTask domain design
+- [ ] Approve roles and permissions matrix
+- [ ] Approve task state-transition table
+- [ ] Define task fields, reward-pool rules, errors and events
+- [ ] Define invariants and tests before implementation
 
-### Module 5 — Cosmos deep architecture (2026-10-24)
+### 4. Custom TeamTask module
+- [ ] Implement task creation and assignment
+- [ ] Implement authorized member workflow and submission
+- [ ] Implement leader review, rejection feedback and state changes
+- [ ] Trace message → validation → keeper → store → event/query
+- [ ] Pass authorization and invalid-transition tests
 
-- [x] Conceptual checkpoint: 3/3 correct. Evidence: Q1 identified the consensus/application-execution boundary; Q2 identified the security and operational responsibilities of an app-specific chain; Q3 distinguished CheckTx admission from commitment.
-- [~] Source-level BaseApp and transaction call graph — next step; exact symbols and release tag still need interactive inspection.
-- [ ] Runnable lab and failure experiment — not performed.
-- [ ] Selected dependency baseline and application build/test — not approved or performed.
-- [ ] Production or performance claims — none established.
+### 5. Rewards and bank integration
+- [ ] Define and test funded reward pool
+- [ ] Transfer reward only after approval
+- [ ] Prevent duplicate reward
+- [ ] Test insufficient funds, wrong signer and repeated approval
 
+### 6. Query and developer interfaces
+- [ ] Task and assignment queries
+- [ ] CLI and transaction/event inspection
+- [ ] Verify gRPC/REST capabilities for the selected release
 
-### Module 5 source investigation — BaseApp (2026-10-24)
+### 7. React frontend and wallet
+- [ ] Connect wallet and show selected address
+- [ ] Sign/broadcast transactions and display pending/success/failure states
+- [ ] Demonstrate full workflow and independently verify chain state
 
-- [~] Source-level lifecycle investigation started against Cosmos SDK `v0.54.4`: inspected `CheckTx`, `RunTx`, `PrepareProposal`, `ProcessProposal`, `FinalizeBlock`, `internalFinalizeBlock`, `executeTxsWithExecutor`, `deliverTx`, `runMsgs`, `Commit`, and `MsgServiceRouter.Handler`. Evidence is documented in `docs/modules/MODULE-05-cosmos-stack-architecture-abci.md`.
-- [ ] Complete module wiring and AnteHandler-chain trace.
-- [ ] Runnable lab and failure experiment.
-- [ ] Clean build/test against an approved dependency baseline.
+### 8. Quality and failure experiments
+- [ ] Unit, integration and end-to-end tests
+- [ ] Authorization, duplicate operation, invalid transition and insufficient-funds tests
+- [ ] Record gas observations and test methodology without unsupported claims
 
+### 9. Multi-validator consensus
+- [ ] Run compatible local multi-validator network
+- [ ] Explain validator power, voting, block commit and finality
+- [ ] Record controlled failure/recovery experiment
 
-### Module 5 source-level mastery checkpoint — BaseApp (2026-10-24)
+### 10. Governance and upgrades
+- [ ] Study proposal/parameter flow supported by selected version
+- [ ] Perform disposable local upgrade or migration
+- [ ] Verify state before and after migration
 
-- [x] 3/3 correct: message-cache failure semantics; separate AnteHandler cache/fee-sequence implications; MsgServiceRouter lookup by message type URL.
-- Evidence and explanation: `docs/modules/MODULE-05-cosmos-stack-architecture-abci.md`.
+### 11. CosmWasm
+- [ ] Explain Rust/Wasm contract lifecycle and execution boundary
+- [ ] Deploy and test a local contract experiment
+- [ ] Demonstrate query/execute and contract migration where supported
 
-### Module 5 source investigation — AnteHandler and module wiring (2026-10-24)
+### 12. IBC fundamentals
+- [ ] Run two compatible local chains
+- [ ] Trace clients, proofs, connections, channels and packet flow
+- [ ] Demonstrate acknowledgement and timeout/recovery paths
 
-- [~] Inspected `baseapp/options.go`, `types/handler.go`, `x/auth/ante/ante.go`, `types/module/module.go`, and reference wiring in `simapp/app.go`, all from SDK tag `v0.54.4`. Recorded default decorator order, gas-meter ordering warning, SetAnteHandler attachment, module service registration, and explicit block-hook ordering in the handbook.
-- [ ] ISN-specific design review for signer/authorization/fees/sequences/gas/timeouts.
-- [ ] Runnable lab and negative/failure tests.
-- [ ] Clean build/test against an approved dependency baseline.
+### 13. Interchain extensions
+- [ ] Demonstrate ICS-20 transfer and voucher/escrow behavior
+- [ ] Test a failure/refund path
+- [ ] Explore ICA or IBC-enabled CosmWasm after fundamentals pass
 
+### 14. Security and operations
+- [ ] Threat model and key-handling notes
+- [ ] Monitoring, backup, recovery and upgrade runbooks
+- [ ] Reproducible performance methodology and results
+
+### 15. Interview mastery
+- [ ] Explain major concepts without notes
+- [ ] Draw transaction, task lifecycle, consensus, contract and IBC flows
+- [ ] Explain at least one failure and trade-off per major phase
+
+## Existing foundational evidence (historical; not a project completion claim)
+
+Previous study includes conceptual checkpoints and source investigations around deterministic state machines, consensus/finality, transaction lifecycle, hashes/keys/signatures, BaseApp, ABCI, AnteHandler and module wiring. Detailed notes remain in docs/modules/. Some prior source investigation used Cosmos SDK v0.54.4; that is not an approved dependency choice for TeamTask Chain.
+
+## Evidence log
+
+Append each completed experiment with date, exact version, command, actual output or evidence link, interpretation, failure case, and remaining gaps.
 
 ## Mastery evidence template
 
-For each item, record:
-
-- **Concept ID:**
+- **Concept/milestone:**
+- **Version/commit:**
 - **Learner explanation / diagram:**
 - **Lab and exact commands:**
 - **Observed result and evidence link:**
-- **Failure experiment explained:**
+- **Failure experiment and diagnosis:**
 - **Interview questions answered:**
 - **Remaining gaps:**
 - **Review date:**
-
-Do not mark mastery based only on reading, generated code, or a successful compilation.
