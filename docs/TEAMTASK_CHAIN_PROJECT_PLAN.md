@@ -82,6 +82,10 @@ For each concept or milestone, keep the relevant records updated with:
 - Interview questions, answers, follow-ups, and mastery evidence.
 - Open questions and the next concrete step.
 
-## 7. Current status
+## 7. Version decision and current status
 
-**Planning reset; Phase 0 is next.** The repository already contains foundational chapters and a provisional toolchain compatibility draft. Review them as learning material; do not assume they prove mastery or that the draft is an approved dependency lock. Inspect the actual local checkout and environment before changing code or pinning versions.
+**Selected implementation target:** Cosmos SDK `v0.55.0` with CometBFT `v0.40.0`, matching the dependency pair inspected in the existing official Cosmos example reference. The reference is for learning architecture only; TeamTask Chain must be implemented in this repository.
+
+The earlier SDK `v0.54.4` / CometBFT `v0.39.4` candidate is superseded. Validate the chosen pair during the real implementation build, tests, and local-chain smoke test. Do not run a separate disposable compatibility experiment or repeat the version audit unless a concrete issue requires it.
+
+**Next:** begin the application skeleton and update the learning documentation alongside every implementation step. Version validation remains pending until commands have actually run and their results are recorded.
