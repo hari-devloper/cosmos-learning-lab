@@ -1,109 +1,163 @@
-# Cosmos Learning Roadmap
+# Cosmos Learning Roadmap — TeamTask Chain
 
-Status: **Draft curriculum — user-approved sequencing: single-chain first; IBC later. Framework versions and implementation details still require review.**
+Status: **Fixed sequence for the TeamTask Chain learning project.** This is a learning POC, not the Institutional Settlement Network. Do not use Codex for this repository.
 
-## Working method
+## Product use case
 
-1. GPT explains the concept and checks understanding.
-2. We document the concept, diagram, source path, and lab plan.
-3. We verify the relevant framework versions and source references.
-4. We run a lab or failure experiment and record actual evidence.
-5. The learner completes a review / mastery gate.
-6. Only then may Codex implement the corresponding approved product change.
+A team leader creates tasks, assigns a member, defines a deadline and reward, and funds the reward pool. The assigned member moves the task through its permitted workflow and submits it for review. The leader approves or rejects the submission. Approval releases the agreed reward exactly once; rejection records feedback and returns the task to in-progress. Chain-side authorization and state-transition validation are authoritative; frontend controls are not security controls.
 
-## Stage 0 — Environment and compatibility
+The exact task states, messages, reward funding model, and validation rules must be designed and documented before implementation.
 
-- Confirm the Linux/WSL development context and toolchain.
-- Verify exact compatible Cosmos SDK, CometBFT, IBC-Go, and optional CosmWasm versions from official release metadata and module files.
-- Create a reproducible dependency baseline only after compatibility review.
-- Keep the product architecture and compatibility choices explicitly provisional until approved.
+## Working cycle and gates
 
-Gate: a reproducible environment audit and evidence-backed dependency compatibility record.
+1. Explain the concept and check understanding.
+2. Design the smallest required change and record the decisions.
+3. Verify versions, APIs, source paths, and commands against the actual checkout.
+4. Implement together without Codex.
+5. Run tests/labs and record actual evidence, including failures.
+6. Trace the implementation through source code and update diagrams/docs.
+7. Complete a mastery check before moving on.
 
-## Stage 1 — Distributed systems foundations
+Do not skip gates. Do not invent outputs or silently change the stack or use case.
 
-- Deterministic state machines and replicated state
-- Transactions, ordering, consensus, finality, and safety/liveness
-- Accounts, keys, signatures, hashes, and encoding
-- Byzantine fault tolerance concepts and operational assumptions
+## Phase 0 — Repository and environment baseline
 
-Gate: explain the trust model, failure assumptions, and why deterministic execution matters.
+- Inspect the current cosmos-learning-lab checkout and its existing docs.
+- Verify OS/WSL environment, Go, Git, protobuf tooling, Node/frontend prerequisites, and installed Cosmos example.
+- Record exact versions and distinguish installed facts from planned requirements.
+- Review the compatibility draft; verify official release metadata and dependency compatibility before pinning versions.
+- Preserve the official cosmos/example run as a reference experiment only; do not clone it blindly as our own implementation.
 
-## Stage 2 — Cosmos stack architecture
+**Exit gate:** reproducible environment audit, known repository status, reviewed compatibility decision, and a written first-milestone checklist.
 
-- Cosmos SDK application architecture and module boundaries
-- CometBFT responsibilities and ABCI/application boundary
-- Transactions, messages, signers, ante processing, and execution lifecycle
-- State stores, caches, events, queries, and errors
-- Genesis, app configuration, upgrades, and local networks
+## Phase 1 — Cosmos application foundations
 
-Gate: trace one transaction from submission through validation, execution, state changes, and query/event observation using a version-pinned source path.
+- Understand Cosmos SDK, CometBFT, ABCI/application boundary, deterministic state machines, and module architecture.
+- Trace genesis, configuration, app wiring, node startup, block production, and local queries in the selected version.
+- Run and inspect a minimal local chain using verified commands.
+- Document key directories and source call paths.
 
-## Stage 3 — Build a minimal Cosmos application
+**Exit gate:** start the local chain from a clean documented state and explain how the app is wired and started.
 
-- Scaffold only after versions and design are approved
-- Define state, messages, validation, keeper boundaries, and queries
-- Write unit, integration, and end-to-end tests
-- Test invalid inputs, replay/idempotency assumptions, and deterministic behavior
+## Phase 2 — Transaction lifecycle
 
-Gate: explain and demonstrate the full path with tests and recorded evidence.
+- Messages and transactions; protobuf schemas and generated code.
+- Account addresses, public/private keys, signatures, encoding, and signers.
+- Mempool/broadcast lifecycle, ante handling, fees, gas, execution, events, transaction queries, and errors.
+- Trace one successful transaction and deliberately test invalid inputs.
 
-## Stage 4 — Institutional settlement domain
+**Exit gate:** explain and verify the path from CLI submission to committed state and queryable result.
 
-- Accounts, participants, assets, transfers, and authorization
-- State and accounting invariants
-- Settlement lifecycle, rejection, duplicate handling, and reconciliation
-- Auditability, privacy boundaries, and operational controls
+## Phase 3 — TeamTask domain and custom module design
 
-Gate: approve the domain model and invariant tests before product implementation.
+- Define task fields, roles, task states, allowed transitions, errors, and events.
+- Design the smallest custom module and keeper/store boundaries.
+- Define authorization rules and invariants before coding.
+- Create state-transition diagrams and message/query specifications.
 
-## Stage 5 — Single-chain settlement application and verification
+**Exit gate:** reviewed domain model, transition matrix, authorization matrix, and test cases before implementation.
 
-- Define participants, accounts, assets, transfers, authorization, and legal state transitions
-- Specify accounting invariants before coding
-- Test success, rejection, invalid inputs, duplicate requests, and replay assumptions
-- Build deterministic unit and integration tests around the approved single-chain state machine
+## Phase 4 — Implement the TeamTask module
 
-Gate: explain the settlement lifecycle and demonstrate invariant tests and deliberately injected failures. Do not begin IBC implementation in this stage.
+- Add task creation and assignment, deadline/reward fields, status transitions, submission, review, and feedback.
+- Learn keepers, stores, codecs, protobuf messages, message servers, queries, events, and errors through the actual implementation.
+- Test unauthorized actions, invalid transitions, duplicate operations, and deterministic behavior.
 
-## Stage 6 — Read models and interfaces
+**Exit gate:** core task lifecycle works in repeatable tests and the learner can trace each message through validation, keeper, store, and emitted events.
 
-- Events and indexer/read-model design
-- PostgreSQL as a derived, rebuildable projection—not the authoritative settlement state
-- API contracts, React/TypeScript consoles, pagination, and observability
-- Rebuild, replay, and reconciliation tests
+## Phase 5 — Roles, reward pool, and bank integration
 
-Gate: demonstrate that the read model can be rebuilt and reconciled against authoritative chain state.
+- Define leader/member permissions using transaction signer identity.
+- Fund a reward pool using explicit, verifiable rules.
+- Integrate with the bank module for reward transfer.
+- Ensure only approved tasks pay rewards and that a task cannot be rewarded twice.
+- Test insufficient funds, wrong signer, rejection, duplicate approval, and transfer failures.
 
-## Stage 7 — Security, reliability, and performance
+**Exit gate:** authorization and reward invariants are covered by tests; reward issuance is funded and exactly-once at the application state-machine level.
 
-- Threat modeling, key management, access control, and secure defaults
-- Fuzz/property testing where appropriate
-- Load tests with reproducible methodology
-- Metrics, logs, alerts, backups, upgrades, and incident runbooks
-- Independent security and operational review before any production claim
+## Phase 6 — Queries and developer interfaces
 
-Gate: evidence-backed risk register and repeatable test suite.
+- Add CLI commands and queries for tasks, assignments, status, review history, and rewards.
+- Understand gRPC/query services, REST gateway availability in the chosen version, transaction search, and event inspection.
+- Record exact commands and actual responses.
 
-## Stage 8 — IBC and cross-chain lifecycle (later stage)
+**Exit gate:** users can inspect all required POC state through documented query/CLI paths without directly editing chain state.
 
-IBC is deliberately deferred until the single-chain settlement state machine, invariants, tests, read model, and reconciliation workflow are understood and reviewed.
+## Phase 7 — React frontend and wallet flow
 
-- IBC architecture, clients, connections, channels, and packets
-- Timeout, acknowledgement, refund, retry, recovery, and reconciliation paths
-- Compatible release family and local test network validation
-- Cross-chain failure experiments and end-to-end evidence
+- Build a small UI for leader and member workflows.
+- Connect a compatible wallet and understand address selection, signing, broadcasting, pending state, confirmation, and errors.
+- Use chain-side authorization as the security boundary.
+- Keep frontend scope limited to the working TeamTask lifecycle.
 
-Gate: demonstrate success and failure paths with the selected compatible IBC-Go release. Do not treat a packet timeout as proof that the remote chain never executed unrelated work.
+**Exit gate:** demonstrate create → assign → progress → submit → approve/reject → reward, with chain state independently verified.
 
-## Stage 9 — Interview and mastery
+## Phase 8 — Quality and failure experiments
 
-- Explain architecture and trade-offs without notes
-- Draw key execution and packet flows
-- Debug deliberately injected failures
-- Answer design, security, performance, and operations questions
-- Track confidence, evidence, and gaps
+- Unit, integration, and end-to-end tests.
+- Authorization bypass attempts, invalid transitions, duplicate reward attempts, insufficient funds, invalid deadlines, and malformed inputs.
+- State invariants, events, error semantics, gas observations, and deterministic execution.
+- Document failures, diagnosis, fixes, and regression tests.
 
-## Mastery rule
+**Exit gate:** repeatable test suite and evidence-backed explanation of the main failure paths.
 
-A topic is not complete merely because code compiles. Completion requires explanation, reproducible evidence, failure understanding, and interview readiness. Actual results must be recorded only after the corresponding work has been performed.
+## Phase 9 — Multi-validator network and CometBFT
+
+- Run a small local multi-validator network using version-compatible tooling.
+- Study proposal/voting flow, validator power, block commit, finality, node configuration, and node failure behavior.
+- Distinguish application execution from consensus responsibilities.
+
+**Exit gate:** capture and explain multi-validator observations and controlled failure/recovery experiments.
+
+## Phase 10 — Governance, parameters, and upgrades
+
+- Study governance proposal lifecycle and parameter changes where supported by the chosen application/version.
+- Practice a controlled upgrade and state migration in a disposable local network.
+- Understand app versioning, migration handlers, genesis export/import, and rollback limitations.
+
+**Exit gate:** complete a reproducible local upgrade or migration experiment with before/after state checks.
+
+## Phase 11 — CosmWasm
+
+- Learn Rust/Wasm contract architecture, entry points, storage, instantiate/execute/query, events, gas, permissions, and contract migration.
+- Add a small contract experiment related to TeamTask only after the SDK application is stable.
+- Compare native SDK module logic with contract-based logic and document trade-offs.
+
+**Exit gate:** deploy and test a local contract and explain its lifecycle, execution boundaries, and migration behavior.
+
+## Phase 12 — IBC fundamentals with two chains
+
+- Build/run two compatible local chains and verify exact IBC-Go compatibility before use.
+- Study light clients, client updates, proofs, connections, channels, packet commitments, acknowledgements, timeouts, relayers, and recovery.
+- Run successful and failed packet experiments.
+
+**Exit gate:** trace a packet end to end and demonstrate acknowledgement/timeout behavior with recorded evidence.
+
+## Phase 13 — Interchain token and application experiments
+
+- Study ICS-20 transfer, escrow, voucher denominations, packet refunds, and reconciliation.
+- Explore interchain accounts and IBC-enabled CosmWasm only after the base packet flow is understood and version compatibility is verified.
+- Keep interchain experiments in the same repository and document them as optional extensions to TeamTask, not a new product.
+
+**Exit gate:** demonstrate a cross-chain transfer and at least one failure/recovery path across two local chains.
+
+## Phase 14 — Security and operations
+
+- Threat model, key handling, least privilege, supply-chain/dependency review, and safe local development.
+- Logging, events, metrics, monitoring, backups, recovery, upgrade runbooks, and performance methodology.
+- Fuzz/property testing where appropriate; no production-readiness claim without independent review.
+
+**Exit gate:** documented threat model, operational runbooks, and reproducible test/performance evidence.
+
+## Phase 15 — Interview and mastery review
+
+- Explain architecture and trade-offs without notes.
+- Draw transaction, state-transition, consensus, contract, and IBC packet flows.
+- Debug selected failures and justify security and reliability decisions.
+- Track demonstrated skills and remaining gaps.
+
+**Exit gate:** each topic has an explanation, verified source references, lab/test evidence, failure understanding, and interview questions with answers.
+
+## Scope and honesty
+
+This sequence covers major Cosmos SDK, CometBFT, CosmWasm, and IBC concepts through one integrated learning project plus focused experiments. It does not claim to cover every feature in the Cosmos ecosystem. Any additional topic must be added explicitly to the roadmap with a reason and an acceptance gate.
