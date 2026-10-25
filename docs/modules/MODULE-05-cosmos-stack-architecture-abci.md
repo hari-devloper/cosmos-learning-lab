@@ -1316,7 +1316,46 @@ A. Yes. A correct diagram and quiz prove the runtime behavior.
 B. No. They demonstrate conceptual understanding; implementation claims require pinned-version source evidence and reproducible builds/tests and relevant failure experiments.
 C. Yes, provided PostgreSQL displays the expected balances.
 
-**Correct answer: B.** Keep learning confidence and implementation evidence separate.
+**Correct answer: B.** The learner answered B correctly. Keep learning confidence and implementation evidence separate.
+
+### Practical mastery gate 1 — Verify the actual development environment
+
+**Status: pending learner-run evidence.** Do not mark this gate complete until the commands have been run in the intended Linux/WSL terminal and the output has been reviewed.
+
+Run this in **Ubuntu 24.04 under WSL2**, not in Windows PowerShell or Command Prompt:
+
+```bash
+printf '\n== OS ==\n'
+cat /etc/os-release | sed -n '1,6p'
+printf '\n== Architecture ==\n'
+uname -m
+printf '\n== Go ==\n'
+command -v go || true
+go version 2>&1 || true
+go env GOROOT GOPATH 2>&1 || true
+printf '\n== Git ==\n'
+command -v git || true
+git --version 2>&1 || true
+printf '\n== Node.js / npm (diagnostic only) ==\n'
+command -v node || true
+node --version 2>&1 || true
+command -v npm || true
+npm --version 2>&1 || true
+printf '\n== Docker (diagnostic only) ==\n'
+command -v docker || true
+docker --version 2>&1 || true
+printf '\n== Working directory ==\n'
+pwd
+```
+
+Review requirements:
+- Confirm the OS is the intended WSL Ubuntu environment and architecture is `x86_64`.
+- Confirm `go` and `git` resolve to Linux paths (normally under `/usr/local/go/bin` and `/usr/bin` respectively), not Windows paths mounted below `/mnt/c`.
+- Record Node/npm and Docker as present, absent, or resolving to Windows tools; do not install or change anything during this diagnostic step.
+- Do not infer a successful project build from installed tool versions.
+- Save the exact output and date with the learning evidence once reviewed. Redact personal path details if publishing logs publicly.
+
+**Next action:** the learner runs these commands and shares the output. Only then should we assess the environment and choose the next gate. No dependency baseline has been approved and no application build/test result is claimed.
 
 ### 13. How this chapter relates to earlier modules
 
