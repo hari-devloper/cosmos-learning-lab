@@ -81,3 +81,12 @@ Commands were run in Ubuntu 24.04.5 WSL. Shared output:
 - The output shows a `replace` section exists, but the replacement targets were **not** captured by the shared output.
 
 This confirms the exact tag references and selected module's declared Go/CometBFT versions. It does not yet establish the full resolved module graph, the effect of replacements, or build/test success.
+
+### Follow-up: SDK replacement directives inspected — 2026-10-25
+
+Learner shared the complete `replace` block from the downloaded SDK `v0.54.4` `go.mod`:
+
+- `github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0` (comment: use Cosmos fork of keyring).
+- `github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7` (comment: replace broken goleveldb).
+
+The module file also contains a separate `retract` block for older SDK versions; it is not another replacement block. These are declarations in the SDK's own module file. Their effect on a consuming application's resolved module graph still needs to be inspected after a minimal disposable module is created.
