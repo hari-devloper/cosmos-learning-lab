@@ -1,0 +1,112 @@
+flowchart TB
+  %% COSMOS-ARCH-001 — component map for learning and source navigation.
+  %% Conceptual architecture. Exact types/wiring vary by Cosmos SDK and CometBFT release.
+  %% Official references:
+  %% - https://github.com/cosmos/cosmos-sdk-docs/blob/main/docs/learn/beginner/00-app-anatomy.md
+  %% - https://github.com/cosmos/cosmos-sdk-docs/blob/main/docs/learn/advanced/00-baseapp.md
+  %% - https://github.com/cosmos/cosmos-sdk-docs/blob/main/docs/learn/concepts/lifecycle.md
+
+  subgraph OUTSIDE["A. Clients and node interfaces"]
+    CLI["Chain daemon / CLI"]
+    WALLET["Wallet, institution service, or client"]
+    RPC["RPC / REST / gRPC query endpoints"]
+    INDEXER["External indexer / event consumer"]
+    SQL[("PostgreSQL read model")]
+    UI["Explorer / bank portal / reporting"]
+    WALLET -->|"signed tx bytes"| CLI
+    CLI -->|"broadcast / RPC"| NODE
+    RPC -->|"read-only queries"| APP
+    INDEXER -->|"project committed data"| SQL --> UI
+    APP -. "events / query data" .-> RPC
+  end
+
+  subgraph NODELAYER["B. Full node: networking and consensus"]
+    NODE["Cosmos chain daemon process"]
+    P2P["P2P networking and transaction/block gossip"]
+    MEMPOOL["CometBFT mempool / admission path"]
+    CONSENSUS["CometBFT consensus engine"]
+    BLOCKS[("Block store / consensus metadata")]
+    NODE --- P2P
+    NODE --- MEMPOOL
+    NODE --- CONSENSUS
+    CONSENSUS -->|"ordered, decided block"| BLOCKS
+  end
+
+  subgraph BOUNDARY["C. Consensus ↔ application boundary"]
+    ABCI["ABCI / ABCI++ request-response boundary"]
+  end
+
+  subgraph APPLICATION["D. Cosmos SDK application (state machine)"]
+    APP["BaseApp / SDK application runtime"]
+    TXDEC["Tx decoding + transaction context"]
+    ANTE["AnteHandler chain: configured fee, gas, signature, sequence checks"]
+    MSGROUTER["Msg service router: type URL → registered handler"]
+    QROUTER["Query router: query service → handler"]
+    MODMGR["Module Manager: module lifecycle and configured ordering"]
+    CODEC["Protobuf codecs / interface registry"]
+    APP --> TXDEC --> ANTE --> MSGROUTER
+    APP --> QROUTER
+    MODMGR -. "initialization and block hooks" .-> APP
+    CODEC -. "encode / decode persisted and wire data" .-> TXDEC
+  end
+
+  subgraph MODULES["E. Modules: domain and protocol capabilities"]
+    AUTH["x/auth: accounts, account metadata and transaction support"]
+    BANK["x/bank: balances and coin transfers"]
+    STAKING["x/staking: validator/delegation state, if enabled"]
+    GOV["x/gov: on-chain governance, if enabled"]
+    UPGRADE["x/upgrade: coordinated software/state upgrade support, if enabled"]
+    CUSTOM["ISN settlement module: institutional authorization, transfer rules and settlement records"]
+    KEEPER["Keepers: controlled APIs for reading/writing module state"]
+    MSGROUTER --> AUTH
+    MSGROUTER --> BANK
+    MSGROUTER --> CUSTOM
+    MODMGR --> STAKING
+    MODMGR --> GOV
+    MODMGR --> UPGRADE
+    AUTH --> KEEPER
+    BANK --> KEEPER
+    CUSTOM --> KEEPER
+  end
+
+  subgraph STATE["F. Application state and commitment"]
+    STORES["Store keys and module KV stores"]
+    MULTI["MultiStore / cached branches / transaction state"]
+    COMMIT["Commit application state"]
+    APPHASH["Application hash / state commitment in block protocol"]
+    KEEPER --> STORES --> MULTI --> COMMIT --> APPHASH
+  end
+
+  subgraph LIFECYCLE["G. Chain lifecycle and operator responsibilities"]
+    GENESIS["Genesis: initial chain and module state"]
+    UPGRADEPLAN["Upgrade plan + versioned module migrations"]
+    SNAPSHOT["Snapshots / state sync recovery path"]
+    PRUNE["Pruning policy"]
+    ARCHIVE["Archive / retained historical source"]
+    GENESIS -->|"initialize"| APP
+    UPGRADEPLAN -->|"upgrade execution"| MODMGR
+    SNAPSHOT -. "restore/bootstrap" .-> NODE
+    PRUNE -. "local history retention" .-> BLOCKS
+    ARCHIVE -. "historical access / replay support" .-> INDEXER
+  end
+
+  CONSENSUS <-->|"ABCI calls"| ABCI
+  ABCI <--> APP
+  BLOCKS -->|"committed blocks / results"| INDEXER
+  APPHASH -->|"state commitment participates in chain headers"| CONSENSUS
+
+  RULE1["Consensus orders blocks; it does not define ISN business policy."]
+  RULE2["The SDK application deterministically applies state transitions."]
+  RULE3["PostgreSQL and UI are derived projections, not settlement authority."]
+  RULE4["IBC and cross-chain settlement are intentionally out of initial scope."]
+  RULE1 -.-> CONSENSUS
+  RULE2 -.-> APP
+  RULE3 -.-> SQL
+  RULE4 -.-> CUSTOM
+
+  classDef core fill:#e7efff,stroke:#315ea8,color:#122b50,stroke-width:2px;
+  classDef state fill:#e6f5e8,stroke:#287443,color:#12351d,stroke-width:2px;
+  classDef caution fill:#fff2d9,stroke:#a45d00,color:#492900;
+  class APP,ABCI,CONSENSUS,MODMGR,MSGROUTER core;
+  class STORES,MULTI,COMMIT,APPHASH state;
+  class RULE1,RULE2,RULE3,RULE4 caution;
