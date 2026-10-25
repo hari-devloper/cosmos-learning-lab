@@ -75,15 +75,13 @@ flowchart TB
 
   subgraph STATE["4. How application state is stored and committed"]
     direction LR
-    MODSTORE["Module KV stores<br/>each module's state"]
-    MULTI["MultiStore<br/>collection of module stores"]
+    MULTI[("Root CommitMultiStore<br/>contains module KV stores")]
     CACHE["Cache branches / volatile execution state<br/>isolate tentative changes"]
     COMMIT["Commit application state"]
     HASH["Application hash / state commitment"]
-    MODSTORE --> MULTI
-    MULTI --> CACHE
+    KEEP -->|"keeper uses its store key"| MULTI
+    MULTI -->|"branch for execution"| CACHE
     CACHE --> COMMIT --> HASH
-    KEEP --> MODSTORE
     HASH -. "commitment reported through chain protocol" .-> CONS
   end
 
