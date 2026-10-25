@@ -15,12 +15,11 @@ The learning project is now TeamTask Chain. The Institutional Settlement Network
 ## Phase 0 — Repository and environment baseline
 
 - [x] Initial WSL/toolchain observations recorded — docs/ENVIRONMENT_AUDIT.md
-- [x] Provisional dependency evidence and open compatibility questions recorded — docs/TOOLCHAIN_COMPATIBILITY_DRAFT.md
-- [ ] Inspect local checkout status and current directory structure
-- [ ] Verify tool versions directly in the working WSL terminal
-- [ ] Review dependency compatibility against official release metadata
-- [ ] Approve the initial version baseline only after a clean validation build/test
-- [ ] Write the exact Phase 1 commands and expected observations
+- [x] Selected target pair recorded: Cosmos SDK `v0.55.0` + CometBFT `v0.40.0` — docs/TOOLCHAIN_COMPATIBILITY_DRAFT.md
+- [ ] Validate dependency resolution during actual TeamTask Chain implementation
+- [ ] Build the application and run available tests; record actual results
+- [ ] Run a local-chain smoke test and record observed output
+- [ ] Update the environment audit only if implementation exposes a concrete prerequisite gap
 
 ## Fixed milestone tracker
 
