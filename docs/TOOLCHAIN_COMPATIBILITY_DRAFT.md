@@ -30,6 +30,12 @@ The following official `go.mod` files were fetched from their exact release tags
 - IBC-Go v11.2.0: https://github.com/cosmos/ibc-go/blob/v11.2.0/go.mod
 - wasmd v0.70.5: https://github.com/CosmWasm/wasmd/blob/v0.70.5/go.mod
 
+## Follow-up official release review — 2026-10-25
+
+The official [Cosmos SDK releases page](https://github.com/cosmos/cosmos-sdk/releases) lists SDK `v0.55.0` and `v0.54.4` among the current release entries reviewed for this decision. The official `v0.55.0` notes state that moving from `v0.54.x` requires a coordinated chain upgrade. The official `v0.54.4` notes describe important security fixes and call the release state-breaking; they include fixes in transaction signature handling, multisig bounds checks, and other areas. See [v0.54.4 release notes](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.4) and [SDK upgrade reference](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md).
+
+This supports treating `v0.54.4` as a serious patch-level candidate, but it does **not** prove it is universally “the most mature” release or automatically suitable for every application. The state-breaking note is a reason to understand upgrade/state implications even for a learning chain. The dependency graph, app build, tests, and scope-specific compatibility remain required validation.
+
 ## Initial interpretation
 
 1. The SDK v0.55.0 release uses the CometBFT v0.40.0 line. It is a distinct dependency family from SDK v0.54.4, which declares CometBFT v0.39.4.
