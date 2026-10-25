@@ -1,0 +1,34 @@
+flowchart TB
+  %% Module 5 — conceptual transaction execution lifecycle.
+  %% Exact symbols/order must be verified against the selected SDK and CometBFT versions.
+  A["Client constructs and signs transaction"] --> B["Node receives transaction"]
+  B --> C["CheckTx / recheck"]
+  C --> D{"Admitted to mempool?"}
+  D -- "No" --> E["Rejected for admission; no business settlement"]
+  D -- "Yes" --> F["Consensus proposes, orders and commits block"]
+  F --> G["FinalizeBlock enters application block execution"]
+  G --> H["Pre-block / begin-block hooks, if configured"]
+  H --> I["BaseApp processes transaction in finalize mode"]
+  I --> J["AnteHandler: configured checks, fees, gas, signatures and sequence"]
+  J --> K{"Ante phase succeeds?"}
+  K -- "No" --> L["Transaction has no successful message execution; ante effects depend on execution/cache semantics"]
+  K -- "Yes" --> M["Message router resolves message type to handler"]
+  M --> N["Settlement handler validates institution authority and business invariants"]
+  N --> O{"Business message succeeds?"}
+  O -- "No" --> P["Discard failed message-state branch; some ante effects may remain"]
+  O -- "Yes" --> Q["Apply staged business-state changes"]
+  P --> R["Continue block processing"]
+  Q --> R
+  L --> R
+  R --> S["End-block hooks, if configured"]
+  S --> T["Commit application stores / multistore"]
+  T --> U["State commitment and committed transaction results"]
+  U --> V["Indexer projects committed facts into PostgreSQL"]
+  V --> W["Explorer / reporting / reconciliation"]
+
+  classDef success fill:#e5f4e8,stroke:#287443,color:#12351d;
+  classDef failure fill:#fff0ee,stroke:#b33a3a,color:#571b1b;
+  classDef caution fill:#fff2d9,stroke:#a45d00,color:#492900;
+  class U,T success;
+  class E,L,P failure;
+  class C,J,K,O caution;
