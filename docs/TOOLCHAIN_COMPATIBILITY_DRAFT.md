@@ -68,3 +68,16 @@ The learner chose the Cosmos SDK **v0.54.x family**, with **v0.54.4 / CometBFT v
 ## Decision gate
 
 No dependency lock, starter application, or implementation work is approved by this draft. The next decision is to choose a candidate SDK/CometBFT release family for the **single-chain learning scope**, verify its source and module graph, and validate it in a disposable application. IBC-Go and CosmWasm are not part of the initial dependency graph unless the user explicitly reopens that scope.
+
+## Learner-run tag and Go metadata check — 2026-10-25
+
+Commands were run in Ubuntu 24.04.5 WSL. Shared output:
+
+- `v0.54.4` tag resolves to commit `0019e50dd23e48de820cd9273e84d140334ed2a1`.
+- `v0.55.0` tag resolves to commit `69dcb02ab9dbe6340c722266b3c52d32f260ac67`.
+- SDK `v0.54.4` declares `go 1.26.5`.
+- SDK `v0.54.4` declares `github.com/cometbft/cometbft v0.39.4` and `github.com/cometbft/cometbft-db v0.14.3` (indirect).
+- Learner environment reported Go `1.26.10 linux/amd64`, which is newer than the declared Go version.
+- The output shows a `replace` section exists, but the replacement targets were **not** captured by the shared output.
+
+This confirms the exact tag references and selected module's declared Go/CometBFT versions. It does not yet establish the full resolved module graph, the effect of replacements, or build/test success.
