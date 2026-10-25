@@ -794,7 +794,7 @@ This summarizes the inspected SimApp example. It is not an ISN implementation an
 
 ## End-to-end integration: how every Module 5 concept connects
 
-**Companion diagrams:** [Open the simplified end-to-end architecture overview](../diagrams/MODULE-05-end-to-end-cosmos-architecture.mmd) for the main system boundaries, then use the [focused transaction-execution lifecycle](../diagrams/MODULE-05-transaction-execution-flow.mmd) to study admission, execution, failure handling, and commit. These diagrams are conceptual aids; verify exact symbols and call order against the approved SDK/CometBFT versions before treating them as implementation evidence.
+**Companion diagrams (rebuilt after review):** [Cosmos component architecture — deeper component map](../diagrams/MODULE-05-cosmos-component-architecture.mmd) covers the node, CometBFT, ABCI, BaseApp, module wiring, routers, keepers, stores, state commitment, client interfaces, and operations. [Transaction lifecycle — detailed flow](../diagrams/MODULE-05-transaction-lifecycle-deep-dive.mmd) follows admission through proposal/consensus, `FinalizeBlock`, transaction/message failure paths, `Commit`, indexing, and reconciliation. They are grounded in official Cosmos SDK documentation listed in their source comments; exact behavior still must be checked against the dependency version selected for the project.
 
 - **Integration ID:** COSMOS-ARCH-001-E2E
 - **Updated:** 2026-10-25
