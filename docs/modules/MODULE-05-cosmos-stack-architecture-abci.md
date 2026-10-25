@@ -1280,6 +1280,44 @@ C. PostgreSQL should apply the transfer because the client already signed it.
 
 **Correct answer: B.** Admission, block inclusion, successful business execution, committed state changes, and read-model visibility are separate stages. Exact fee/sequence effects on a failed transaction depend on the selected SDK execution and cache semantics and must be verified in the pinned release.
 
+### Concept 46 — Conceptual understanding versus implementation evidence
+
+A diagram, source-code reading, and a correct quiz answer are valuable learning artifacts, but they establish different kinds of confidence. Keep the evidence category explicit.
+
+| Evidence type | What it supports | What it does not establish alone |
+|---|---|---|
+| Conceptual explanation / quiz | The learner can explain the intended behavior and distinguish key concepts | That the selected software version behaves exactly as described |
+| Architecture or sequence diagram | The intended component boundaries and flow are understandable | That the diagram matches compiled, wired, running code |
+| Source investigation | Specific symbols and code paths in a particular revision support a claim | That the complete application builds or that a runtime path is exercised |
+| Reproducible build and tests | The recorded source/toolchain builds and the exercised test cases pass | Production readiness, untested failure modes, or independent security assurance |
+| Failure-injection experiment | The system's observed behavior for the specific injected fault and recorded setup | Every possible fault, timing, network partition, or production scenario |
+| Independent security/operations review | Additional assurance within the review's scope | A universal guarantee of correctness or compliance |
+
+#### Applying this to our current Module 5 status
+
+We have a detailed conceptual handbook, diagrams, source references, and several answered quick checks. Those are learning progress—not evidence that an ISN chain implementation exists or that runtime behavior has been verified.
+
+Before marking Module 5 complete, we still need to:
+1. Approve a compatible SDK/CometBFT dependency baseline from official version evidence.
+2. Trace the selected version's transaction path with exact source symbols and clarify version-sensitive behavior.
+3. Build a minimal runnable app/lab and capture reproducible commands, environment, and outputs.
+4. Test successful and rejected settlement paths, including the exact debit/credit, fee, and sequence effects.
+5. Exercise duplicate/replay handling and crash/restart indexing with checkpoint and reconciliation checks.
+6. Test genesis/export and an upgrade/migration fixture, plus the chosen pruning/archive recovery assumptions.
+7. Record actual failures, fixes, test outputs, and remaining limitations; do not invent results or check boxes without evidence.
+
+These tasks are intentionally not being marked complete just because this handbook section was written or committed.
+
+#### Quick check
+
+We have a correct architecture diagram and the learner answers the transaction lifecycle questions correctly. Can we now claim that the ISN implementation's settlement behavior is verified?
+
+A. Yes. A correct diagram and quiz prove the runtime behavior.
+B. No. They demonstrate conceptual understanding; implementation claims require pinned-version source evidence and reproducible builds/tests and relevant failure experiments.
+C. Yes, provided PostgreSQL displays the expected balances.
+
+**Correct answer: B.** Keep learning confidence and implementation evidence separate.
+
 ### 13. How this chapter relates to earlier modules
 
 - **Module 1 — Distributed systems and deterministic state machines:** explains why replicas need deterministic execution and why safety/liveness matter.
