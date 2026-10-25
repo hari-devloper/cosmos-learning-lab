@@ -1099,6 +1099,55 @@ C. Assume the node with the newer PostgreSQL timestamp is correct.
 
 **Correct answer: B.** The hash mismatch is an alert to investigate, not permission to use the read model as the source of truth.
 
+
+**Learner check recorded:** the learner selected B. This is correct. The reasoning is documented in the conversation; it is a conceptual check, not runtime-test evidence.
+
+### Concept 43 — Why build an appchain instead of deploying on an existing chain?
+
+An **appchain** is a blockchain designed around a particular application's rules and needs. With the Cosmos SDK, a team can compose modules and implement custom transaction validation, state transitions, and application logic. That control comes with operational responsibilities.
+
+#### The trade-off in plain English
+
+Think of the choice as renting space in an existing settlement system versus operating a dedicated settlement network.
+
+| Dimension | Dedicated appchain | Existing shared chain / contract deployment |
+|---|---|---|
+| Business rules | Can shape the application state machine and native modules around settlement invariants | Must fit the host chain's execution model and contract interfaces |
+| Protocol control | Greater control over chain configuration, upgrades, and enabled modules | Host-chain governance and protocol changes constrain the application |
+| Operations | Team/network participants must operate, upgrade, monitor, and recover chain infrastructure | Much of the consensus infrastructure is operated by the host network |
+| Security | Depends on the chosen validator set, consensus assumptions, incentives, and operational quality | Inherits important security assumptions of the host chain, but application and contract risks remain |
+| Fees and capacity | Can define network-specific fee/capacity policies, subject to implementation and validator economics | Generally follows host-chain fee markets, congestion, and resource limits |
+| Ecosystem and connectivity | May need to build adoption, wallets, tooling, liquidity, and integrations | Can benefit from existing users, tooling, and composability |
+| Privacy | **Not automatic**; a custom chain is not inherently confidential | **Not automatic**; contracts on public chains generally expose public state unless additional privacy mechanisms are used |
+
+Neither option is universally better. A dedicated chain offers more control, but control is not the same as security, privacy, decentralization, or adoption.
+
+#### Applying the trade-off to ISN
+
+A dedicated Cosmos SDK appchain is a reasonable **architecture candidate** for ISN if the learning goal is to understand and implement native settlement rules, deterministic balance updates, governance/upgrade behavior, and explicit validator/network operations. It is not yet a final production decision.
+
+Before committing to that choice, we must answer:
+1. Who operates validators, and what fault/security assumptions are acceptable?
+2. Which institutions may submit transactions, and where is authorization enforced?
+3. Which information is public, restricted, or confidential? What mechanism actually enforces each boundary?
+4. What availability, recovery, upgrade, audit, and operational staffing obligations can the network meet?
+5. Do the required integrations justify running a separate chain rather than using an existing chain?
+6. What evidence from a prototype, threat model, performance tests, and governance design supports the decision?
+
+#### Decision rule
+
+Choose an appchain because its controllable application state machine and network governance are necessary for the requirements—not simply because “blockchain” or “Cosmos” sounds more flexible. Keep the initial learning prototype narrow: single-chain settlement first, then consider IBC only after state invariants, failure behavior, indexing, reconciliation, and recovery have evidence.
+
+#### Quick check
+
+Our team says, “We should use an appchain because it automatically makes settlement private and more secure.” What is the best response?
+
+A. Correct: a dedicated chain automatically guarantees privacy and stronger security.
+B. Incorrect: an appchain offers control, but privacy and security depend on explicit design, validator assumptions, operations, and evidence.
+C. Correct, as long as PostgreSQL is kept private.
+
+**Correct answer: B.** Appchain sovereignty gives design control; it does not grant security or confidentiality automatically.
+
 ### 11. Interview mastery: answer these without memorized slogans
 
 1. Trace a signed transfer from client bytes through admission, consensus, application execution, commit, indexing, and reconciliation.
