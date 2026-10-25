@@ -23,7 +23,7 @@ Every concept used in the learning journey must be documented here in a way that
 - `docs/LEARNING_ROADMAP.md` — staged curriculum and learning gates
 - `docs/DOCUMENTATION_STANDARD.md` — required structure and evidence rules
 - `docs/modules/` — module-by-module learning chapters
-- `docs/diagrams/` — editable Mermaid source files and rendered preview
+- `docs/diagrams/` — editable Mermaid source files and rendered preview ([open Module 5 diagrams](docs/diagrams/MODULE-05-diagram-preview.md))
 - `docs/TOOLCHAIN_COMPATIBILITY_DRAFT.md` — provisional toolchain research; not an approved dependency lock
 - `docs/ENVIRONMENT_AUDIT.md` — development environment audit
 - `progress/` — mastery checklist and revision tracking
