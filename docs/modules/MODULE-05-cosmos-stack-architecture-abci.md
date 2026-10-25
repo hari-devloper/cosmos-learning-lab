@@ -1048,6 +1048,57 @@ The pinned links and blob SHAs are recorded in the source-investigation sections
 - **Reconciliation:** comparison of authoritative and derived records to detect and safely repair discrepancies.
 - **IBC:** protocol family for cross-chain communication; explicitly deferred from the initial single-chain learning/implementation stage.
 
+### Concept 42 — Application state commitment and the app hash
+
+**Plain-English model:** the application state is the chain's current authoritative data (for ISN, examples include institution balances and settlement records). A state commitment is a compact cryptographic fingerprint of that committed state. In Cosmos SDK, the root `CommitMultiStore` coordinates module stores; committing it produces a commit identifier containing the state commitment/hash. BaseApp returns the commitment through the application/consensus interface, and CometBFT uses the application hash in its block-header flow. Consult the exact pinned release before relying on height-by-height details.
+
+#### What the app hash means—and does not mean
+
+- **It commits to application state.** If the committed state differs, its commitment will generally differ.
+- **Determinism matters.** Replicas that start from the same state and execute the same deterministic state transition should derive the same resulting commitment.
+- **It is not a transaction hash.** A transaction hash identifies transaction bytes (according to the chain's transaction-ID convention); an app hash commits to application state.
+- **It is not the block hash.** A block hash commits to the block/header data as defined by the consensus implementation; the app hash represents the application-state commitment referenced by the header.
+- **It is not PostgreSQL's hash.** PostgreSQL is a derived projection in ISN and can be rebuilt. It must not become the authority for settlement balances.
+- **A hash alone is not a complete query proof.** To prove a particular key/value against a state root, the relevant store/query proof and verification rules are also required.
+- **A mismatch is a diagnostic signal, not a full diagnosis.** First confirm the chain, height, software/configuration, and exact meaning of the reported hash; then investigate divergent state or execution. Do not “fix” the chain by copying data from PostgreSQL.
+
+#### ISN transfer example
+
+Suppose Bank A has ₹1 crore and Bank B has ₹50 lakh. A valid ₹10 lakh transfer executes under the chain's settlement rules. The application state should become A = ₹90 lakh and B = ₹60 lakh. When that state is committed, the application produces a new state commitment. An indexer may separately project the committed result into PostgreSQL; a successful SQL update does not create or change the authoritative app hash.
+
+#### Conceptual flow
+
+```mermaid
+flowchart TD
+    TX[Transfer transaction] --> EXEC[Deterministic application execution]
+    EXEC --> BRANCH[Branched module state]
+    BRANCH -->|successful message changes retained for block| FINAL[Finalize-block state]
+    FINAL --> COMMIT[Commit root MultiStore]
+    COMMIT --> ROOT[Application state commitment / app hash]
+    ROOT --> HEADER[Referenced in CometBFT block-header flow]
+    COMMIT --> INDEX[Committed source data for indexer]
+    INDEX --> PG[PostgreSQL derived projection]
+    PG --> RECON[Reconciliation against authoritative chain data]
+    ROOT -. does not hash .-> PG
+```
+
+This is a conceptual diagram, not a claim that runtime code or Mermaid rendering has been tested. In the source-study documentation, the Cosmos SDK BaseApp and store guides describe the root `CommitMultiStore`, branched execution state, commit behavior, and returned commitment. The current learning candidate has been v0.54.4 for source investigation only; it is **not** an approved dependency baseline.
+
+References:
+- [Cosmos SDK BaseApp documentation](https://github.com/cosmos/cosmos-sdk-docs/blob/main/docs/learn/advanced/00-baseapp.md)
+- [Cosmos SDK store documentation](https://github.com/cosmos/cosmos-sdk-docs/blob/main/docs/learn/advanced/04-store.md)
+- [SDK v0.54.4 release notes](https://github.com/cosmos/cosmos-sdk/releases)
+
+#### Quick check
+
+Two nodes claim to be at the same expected chain state version, but they report different application hashes. What is the best next step?
+
+A. Copy the balances from PostgreSQL into the chain state of one node.
+B. Verify chain/height/version and software/configuration, then investigate state or deterministic-execution divergence using authoritative evidence.
+C. Assume the node with the newer PostgreSQL timestamp is correct.
+
+**Correct answer: B.** The hash mismatch is an alert to investigate, not permission to use the read model as the source of truth.
+
 ### 11. Interview mastery: answer these without memorized slogans
 
 1. Trace a signed transfer from client bytes through admission, consensus, application execution, commit, indexing, and reconciliation.
