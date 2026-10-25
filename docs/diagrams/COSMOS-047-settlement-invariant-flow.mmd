@@ -1,0 +1,13 @@
+flowchart TD
+    A[Transfer request] --> B{Valid key, accounts, amount?}
+    B -- No --> R[Reject; no state mutation]
+    B -- Yes --> C{Key already recorded?}
+    C -- Same request --> I[Return original receipt]
+    C -- Different request --> R
+    C -- New key --> D{Accounts exist and funds sufficient?}
+    D -- No --> R
+    D -- Yes --> E{Credit would overflow?}
+    E -- Yes --> R
+    E -- No --> F[Debit source and credit destination]
+    F --> G[Record receipt and request key]
+    G --> H[Return success]
