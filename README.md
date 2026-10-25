@@ -22,12 +22,13 @@ Every concept used in the learning journey must be documented here in a way that
 
 - `docs/LEARNING_ROADMAP.md` — staged curriculum and learning gates
 - `docs/DOCUMENTATION_STANDARD.md` — required structure and evidence rules
-- `labs/` — reproducible exercises and experiments
-- `diagrams/` — source files for architecture and sequence diagrams
-- `interview/` — interview questions and answer notes
+- `docs/modules/` — module-by-module learning chapters
+- `docs/diagrams/` — editable Mermaid source files and rendered preview
+- `docs/TOOLCHAIN_COMPATIBILITY_DRAFT.md` — provisional toolchain research; not an approved dependency lock
+- `docs/ENVIRONMENT_AUDIT.md` — development environment audit
 - `progress/` — mastery checklist and revision tracking
 
-Directories will be added as their first substantive content is created.
+Labs and interview-specific directories will be added when their first substantive artifacts are ready.
 
 ## Evidence rules
 
@@ -39,4 +40,4 @@ Directories will be added as their first substantive content is created.
 
 ## Current status
 
-Foundation setup. No Cosmos application implementation has started. Framework compatibility and the product architecture remain subject to explicit review before implementation.
+Module 5 remains in learning and evidence-building. The architecture diagrams are conceptual and need visual review; the Cosmos SDK/CometBFT dependency baseline is not approved. No Cosmos application implementation should begin until the relevant concept and design gates have been reviewed explicitly.
