@@ -1245,6 +1245,41 @@ Mark each item complete only when its evidence exists. A correct verbal answer a
 
 **Current honest status:** the conceptual chapter and two source investigations exist; some short conversational checks have been answered correctly. The full source call graph, approved dependency baseline, runnable lab, build/test evidence, failure experiments, and implemented ISN behavior remain open. Do not mark Module 5 complete until the relevant boxes have real evidence.
 
+### Concept 45 — Integrated architecture review: follow one settlement end to end
+
+This concept connects the previous lessons into one mental model. Do not treat the components as interchangeable: each has a different responsibility and a different authority boundary.
+
+#### One local transfer, in order
+
+1. **Client builds and signs a transaction.** Signing proves control of the relevant key under the transaction's signing rules; it does not by itself prove institutional authorization for every business action.
+2. **CometBFT admission/mempool checks.** CheckTx helps decide whether a transaction should be admitted or rechecked. Admission is not inclusion, successful message execution, or settlement.
+3. **Consensus orders a block.** The consensus protocol determines the agreed block order under its assumptions; it does not decide whether ISN's business rule permits the transfer.
+4. **BaseApp and the SDK execute the transaction.** The configured AnteHandler applies transaction-level checks and effects; the message router dispatches the message to the registered ISN handler.
+5. **The ISN settlement handler validates business rules.** It checks authorization and settlement invariants and applies the intended state changes using the configured keeper/store APIs. Debit and credit must obey the defined atomicity and failure semantics.
+6. **The block is finalized and application state is committed.** The root store commit produces the application-state commitment; exact sequencing and interfaces must be verified against the chosen SDK/CometBFT versions.
+7. **Committed data is indexed.** An indexer reads the authoritative committed source and writes an idempotent PostgreSQL projection with safe checkpoint semantics.
+8. **Reconciliation checks the projection.** Missing or conflicting records are investigated and repaired from authoritative chain history/state. PostgreSQL is not used to rewrite committed settlement state.
+9. **Operations preserve recoverability.** Genesis, upgrades/migrations, pruning, archive retention, snapshots and rebuild procedures must be tested for the chosen deployment and recovery goals.
+
+#### Authority boundaries to say aloud
+
+- **Consensus:** which block/order is agreed, subject to the consensus protocol's assumptions.
+- **Application:** whether the ordered transaction is valid under ISN's business rules and what state transition it causes.
+- **Committed application state:** authoritative settlement state for this chain.
+- **App hash:** cryptographic commitment to the application's committed state, not a transaction ID or PostgreSQL checksum.
+- **Indexer/PostgreSQL/UI:** derived query and presentation systems; useful, but rebuildable and subject to lag/failure.
+- **IBC:** a deferred protocol boundary for cross-chain messaging, not a shortcut around single-chain correctness.
+
+#### Quick check
+
+A transaction passes CheckTx, appears in a proposed block, and then its ISN business handler rejects it for insufficient funds. Which statement is correct?
+
+A. The transfer must be treated as settled because CheckTx passed.
+B. The transaction can be included in a committed block without applying the requested transfer; inspect the committed result and configured transaction-failure semantics rather than treating admission as settlement.
+C. PostgreSQL should apply the transfer because the client already signed it.
+
+**Correct answer: B.** Admission, block inclusion, successful business execution, committed state changes, and read-model visibility are separate stages. Exact fee/sequence effects on a failed transaction depend on the selected SDK execution and cache semantics and must be verified in the pinned release.
+
 ### 13. How this chapter relates to earlier modules
 
 - **Module 1 — Distributed systems and deterministic state machines:** explains why replicas need deterministic execution and why safety/liveness matter.
