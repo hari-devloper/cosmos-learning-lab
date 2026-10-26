@@ -1,6 +1,6 @@
 # Cosmos Learning Lab
 
-A hands-on, from-scratch learning project for understanding the Cosmos ecosystem by building one integrated application: **TeamTask Chain**.
+A hands-on learning project for understanding the Cosmos ecosystem by building one integrated application: **TeamTask Chain**.
 
 ## Fixed learning project
 
@@ -28,24 +28,24 @@ A milestone is complete only when its code or lab works, the learner can explain
 
 ## Repository map
 
-- docs/TEAMTASK_CHAIN_PROJECT_PLAN.md — product scope, rules, milestone sequence, and acceptance gates
-- docs/LEARNING_ROADMAP.md — ordered Cosmos curriculum mapped to the project
+- docs/TEAMTASK_CHAIN_PROJECT_PLAN.md — product scope, rules, and acceptance gates
+- docs/LEARNING_ROADMAP.md — simple staged curriculum mapped to the project
+- docs/POC_BUILD_GUIDE.md — concrete commands and the first-chain implementation path
+- docs/CONCEPT_COVERAGE_MATRIX.md — explicit coverage contract for major Cosmos concepts
 - docs/DOCUMENTATION_STANDARD.md — required documentation and evidence format
 - docs/modules/ — existing foundational learning chapters
 - docs/diagrams/ — editable diagrams and previews
 - docs/ENVIRONMENT_AUDIT.md — environment findings
 - docs/TOOLCHAIN_COMPATIBILITY_DRAFT.md — selected SDK/CometBFT target and implementation validation evidence
+- poc/domain/ — small dependency-free Go task model and unit tests; not a blockchain by itself
 - progress/ — milestone and mastery tracking
 
-Create implementation directories only when a milestone needs them. Do not scaffold the entire system in advance.
+Keep the core task application small. Advanced topics are separate focused labs in this same repository; do not add them as dependencies to the core task workflow.
 
 ## Version target
 
-- Cosmos SDK `v0.55.0`
-- CometBFT `v0.40.0`
-
-This pair matches the dependency versions inspected in the existing official Cosmos example reference. The example is a reference only; TeamTask Chain is implemented here. The selected versions still need to pass the actual project's build, tests, and local-chain smoke test.
+Use Ignite CLI v30.x Cosmos tooling as the scaffold baseline for SDK v0.55.x, IBC-Go v11.2.x, and CometBFT v0.40.x. Verify the generated go.mod and actual build/tests; version notes are not proof that the application builds.
 
 ## Current project status
 
-**Version decision made; implementation is next.** The existing foundational chapters remain reference material, not proof that the corresponding concepts are mastered. Build the TeamTask Chain application skeleton against the selected versions and record real verification results. Do not claim an implementation or test is complete before it has been run and verified.
+**POC started on branch `poc/teamtask-minimal`.** A small Go domain model and tests have been added as the first slice. The real Cosmos chain has not yet been scaffolded or tested. Follow `docs/POC_BUILD_GUIDE.md`, then record only observed build/test results. See `docs/CONCEPT_COVERAGE_MATRIX.md` for the agreed major-topic coverage.
