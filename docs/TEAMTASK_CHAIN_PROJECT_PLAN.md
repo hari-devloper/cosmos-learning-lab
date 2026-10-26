@@ -82,10 +82,25 @@ For each concept or milestone, keep the relevant records updated with:
 - Interview questions, answers, follow-ups, and mastery evidence.
 - Open questions and the next concrete step.
 
-## 7. Version decision and current status
+## 7. Keep the POC simple
+
+The first release is a single Cosmos chain with one custom task module. Use the standard auth and bank modules; do not introduce a database, microservices, event streaming, a custom token, NFT badges, or a complex frontend.
+
+Build in this order:
+1. Run the dependency-free domain tests under `poc/domain/`.
+2. Scaffold the actual chain in `chain/` using `docs/POC_BUILD_GUIDE.md`.
+3. Implement task messages, state, queries and signer checks in the custom module.
+4. Connect funded reward payout to the standard bank keeper.
+5. Verify the full flow with CLI transactions and automated tests.
+6. Add a UI only after the chain path works.
+7. Study multi-validator consensus, governance/upgrades, CosmWasm, IBC/ICS-20 and operations in focused labs without expanding the core application.
+
+The coverage contract for major topics lives in `docs/CONCEPT_COVERAGE_MATRIX.md`. Every concept needs an explanation plus relevant source tracing, lab/test evidence, failure cases and interview practice. This does not mean every topic must become production code in the task module.
+
+## 8. Version decision and current status
 
 **Selected implementation target:** Cosmos SDK `v0.55.0` with CometBFT `v0.40.0`, matching the dependency pair inspected in the existing official Cosmos example reference. The reference is for learning architecture only; TeamTask Chain must be implemented in this repository.
 
 The earlier SDK `v0.54.4` / CometBFT `v0.39.4` candidate is superseded. Validate the chosen pair during the real implementation build, tests, and local-chain smoke test. Do not run a separate disposable compatibility experiment or repeat the version audit unless a concrete issue requires it.
 
-**Next:** begin the application skeleton and update the learning documentation alongside every implementation step. Version validation remains pending until commands have actually run and their results are recorded.
+**Current:** the domain model and tests are committed on the POC branch. The chain scaffold, build, local startup and domain-to-module integration remain pending. Follow `docs/POC_BUILD_GUIDE.md`; do not mark the milestone complete until commands have actually run and output is recorded.
