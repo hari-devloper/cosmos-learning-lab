@@ -3,7 +3,7 @@
 - **Module ID:** COSMOS-FOUND-001
 - **Status:** Learning draft; conceptual material, not a version-pinned Cosmos source walkthrough
 - **Project sequence:** Single-chain settlement first; IBC is deferred
-- **Purpose:** Establish the distributed-systems model needed to reason about blockchain execution and institutional settlement.
+- **Purpose:** Establish the distributed-systems model needed to reason about blockchain execution and the TeamTask Chain learning application.
 
 ## Learning outcomes
 
@@ -14,7 +14,7 @@ After completing this module, the learner should be able to:
 3. Distinguish consensus ordering from deterministic transaction execution.
 4. Explain safety and liveness and give an example of each.
 5. Identify common sources of nondeterminism and state divergence.
-6. Apply these ideas to a single-chain institutional settlement example.
+6. Apply these ideas to the TeamTask Chain task-and-reward workflow.
 
 ## 1. The core mental model
 
@@ -42,8 +42,8 @@ A conventional database typically coordinates reads and writes through its own t
 
 The distinction is not that databases cannot be distributed or replicated; they can. The key distinction is the blockchain's consensus and state-transition protocol, plus its assumptions about participating nodes and faults.
 
-For the Institutional Settlement Network:
-- The chain's state is authoritative for accepted settlement state.
+For TeamTask Chain:
+- The chain's state is authoritative for accepted application state.
 - A PostgreSQL read model/indexer is a derived view for search, reporting, and user interfaces.
 - The read model must be rebuildable from the authoritative chain history.
 - A database row in the read model must not independently authorize settlement.
@@ -102,7 +102,7 @@ This list is a review checklist, not a claim that every use of these facilities 
 
 ## 6. Safety and liveness
 
-**Safety** means the system does not reach an unacceptable contradictory outcome. In settlement, an example is preventing the same funds from being spent twice in the authoritative state.
+**Safety** means the system does not reach an unacceptable contradictory outcome. In TeamTask Chain, an example is preventing the same task reward from being paid twice in authoritative state.
 
 **Liveness** means the system can continue making progress under the protocol's stated assumptions. For example, valid transactions eventually get included when the network and validator assumptions needed by the protocol hold.
 
@@ -110,7 +110,7 @@ These goals can come into tension during failures. A system may stop finalizing 
 
 Do not say “blockchain is always available” or “transactions can never be reversed” without naming the protocol and assumptions.
 
-## 7. Institutional settlement example
+## 7. TeamTask Chain example
 
 Suppose account A has 100 settlement units and requests a transfer of 70 units to account B.
 
@@ -145,7 +145,7 @@ Imagine a state transition calling a price API. One node receives 101.2 and anot
 A has 100 units. Two transfers each attempt to send 80. With a single agreed ordering and sequential balance validation, at most one can succeed unless the application explicitly permits credit/overdraft semantics. The invariant must be enforced by authoritative state-transition logic, not just the UI or read model.
 
 ### Experiment D — Read-model outage
-The chain continues processing but the PostgreSQL indexer is offline. The user-facing explorer may be stale or unavailable, but PostgreSQL must not become an alternative settlement authority. Recovery should replay/reconcile the chain history and restore the derived view.
+The chain continues processing but the PostgreSQL indexer is offline. The user-facing explorer may be stale or unavailable, but PostgreSQL must not become an alternative authoritative application state. Recovery should replay/reconcile the chain history and restore the derived view.
 
 ## 9. Interview questions
 
