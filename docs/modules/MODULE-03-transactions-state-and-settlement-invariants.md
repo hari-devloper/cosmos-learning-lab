@@ -32,11 +32,11 @@ The precise order and naming of these stages vary by implementation. In particul
 
 For this project:
 - **Authoritative state:** the state maintained by the chain's application and committed history.
-- **Read model:** PostgreSQL data derived from chain history/events for queries, reporting, dashboards, and user interfaces.
+- **Client views:** queries, events, caches, and frontend data used to display chain state.
 - **Indexer:** the component that consumes committed chain data and projects it into the read model.
 - **Reconciliation:** a process that detects missing, duplicated, delayed, or inconsistent projections and repairs them.
 
-A PostgreSQL row can be stale, duplicated, or absent during an outage. It must not independently authorize a settlement. The read model should have a documented replay/rebuild strategy.
+A client view or cached response can be stale or absent. It must not independently authorize a task transition or reward; the chain remains authoritative.
 
 ## 3. Define invariants before writing code
 
@@ -60,7 +60,7 @@ A transaction identified as already processed must not be applied again. The mec
 Only an identity meeting the defined authorization policy can cause the requested state transition.
 
 ### Read-model provenance
-The read model represents chain-derived information and cannot override authoritative settlement state.
+Client views represent chain-derived information and cannot override authoritative application state.
 
 These are candidate product requirements, not a complete financial, legal, or production security specification.
 
@@ -77,7 +77,7 @@ Validation in the API and UI is useful for user experience and early error repor
 Before implementation, the project must decide and document:
 - What exactly is an account: institution, legal entity, sub-ledger, or wallet?
 - What uniquely identifies an account, and who can control it?
-- What is a settlement unit/denomination and its precision?
+- What task fields, reward denomination, and precision rules must be defined?
 - Are balances integer smallest-units, and how are fees/rounding represented?
 - What does “available balance” mean versus booked balance or reserved balance?
 - Can an account be frozen, restricted, or subject to limits?
@@ -112,7 +112,7 @@ Exact schemas and algorithms depend on the selected chain interface and version;
 Balance is 100. Two 80-unit transfers arrive. Explain why UI checks can both pass and why authoritative sequential state validation must reject at least one under no-overdraft semantics.
 
 ### Experiment B — Indexer outage
-The chain commits transfers while PostgreSQL is offline. Explain how the system can restore the projection without treating PostgreSQL as settlement authority.
+The chain commits a task/reward transaction while a client is offline. Explain how the client can recover current state without becoming an authority.
 
 ### Experiment C — Duplicate event
 The indexer processes the same committed event twice. Explain what could happen without idempotency or uniqueness safeguards, and propose an invariant for the projection.
@@ -128,19 +128,19 @@ A client times out and resubmits the same logical payment. Explain why transport
 4. What does atomicity mean for a transfer?
 5. How does replay protection differ from indexer idempotency?
 6. What metadata helps an indexer detect missed or duplicated data?
-7. Why is a successful API submission not proof of settlement?
+7. Why is a successful API submission not proof of task/reward?
 8. What is the difference between available and booked balance, and why must the domain define it?
 9. How should an indexer recover after an outage?
-10. Which business rules must be resolved before a settlement module can be implemented?
+10. Which business rules must be resolved before a TeamTask module can be implemented?
 
 ## 9. Mastery exercise
 
-- [ ] Write five invariants for the settlement domain.
+- [ ] Write five invariants for the TeamTask domain.
 - [ ] Draw the transaction lifecycle and label which stages are authoritative versus derived.
 - [ ] Explain concurrent overspend without relying on frontend checks.
 - [ ] Design a high-level indexer recovery plan after a multi-hour outage.
 - [ ] Explain how a duplicate API retry differs from a duplicate projected event.
-- [ ] List at least eight open settlement-domain questions and mark which must be answered before implementation.
+- [ ] List at least eight open task/reward-domain questions and mark which must be answered before implementation.
 - [ ] Answer all ten interview questions in your own words.
 
 ## 10. Evidence and implementation status
