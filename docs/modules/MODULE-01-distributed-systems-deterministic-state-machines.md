@@ -144,7 +144,7 @@ Imagine a state transition calling a price API. One node receives 101.2 and anot
 A has 100 units. Two transfers each attempt to send 80. With a single agreed ordering and sequential balance validation, at most one can succeed unless the application explicitly permits credit/overdraft semantics. The invariant must be enforced by authoritative state-transition logic, not just the UI or read model.
 
 ### Experiment D — Read-model outage
-The chain continues processing but the PostgreSQL indexer is offline. The user-facing explorer may be stale or unavailable, but PostgreSQL must not become an alternative authoritative application state. Recovery should replay/reconcile the chain history and restore the derived view.
+The chain continues processing but the PostgreSQL indexer is offline. The user-facing explorer may be stale or unavailable, but PostgreSQL must not become an alternative authoritative application state. Clients should query/reconcile against authoritative chain state after an outage.
 
 ## 9. Interview questions
 
