@@ -112,7 +112,7 @@ Exact schemas and algorithms depend on the selected chain interface and version;
 Balance is 100. Two 80-unit transfers arrive. Explain why UI checks can both pass and why authoritative sequential state validation must reject at least one under no-overdraft semantics.
 
 ### Experiment B — Indexer outage
-The chain commits a task/reward transaction while a client is offline. Explain how the client can recover current state without becoming an authority.
+The chain commits a task or reward transaction while a client is offline. Explain how the client can recover current state without becoming an authority.
 
 ### Experiment C — Duplicate event
 The indexer processes the same committed event twice. Explain what could happen without idempotency or uniqueness safeguards, and propose an invariant for the projection.
@@ -140,7 +140,7 @@ A client times out and resubmits the same logical payment. Explain why transport
 - [ ] Explain concurrent overspend without relying on frontend checks.
 - [ ] Design a high-level indexer recovery plan after a multi-hour outage.
 - [ ] Explain how a duplicate API retry differs from a duplicate projected event.
-- [ ] List at least eight open task/reward-domain questions and mark which must be answered before implementation.
+- [ ] List at least eight open TeamTask-domain questions and mark which must be answered before implementation.
 - [ ] Answer all ten interview questions in your own words.
 
 ## 10. Evidence and implementation status
