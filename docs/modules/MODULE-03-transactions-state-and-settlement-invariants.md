@@ -1,9 +1,9 @@
-# Module 3 — Transactions, Application State, and Settlement Invariants
+# Module 3 — Transactions, Application State, and Invariants
 
 - **Module ID:** COSMOS-FOUND-003
 - **Status:** Conceptual learning draft; not a version-pinned implementation guide
 - **Prerequisites:** COSMOS-FOUND-001 and COSMOS-FOUND-002
-- **Project sequence:** Single-chain settlement first; IBC is deferred
+- **Project sequence:** TeamTask single-chain application first; multi-validator, CosmWasm/wasmd, and IBC follow their explicit roadmap phases
 
 ## Learning outcomes
 
@@ -11,8 +11,8 @@ By the end of this module, the learner should be able to:
 1. Separate transaction submission, validation, state transition, commitment, and read-model projection.
 2. Define state invariants before implementation.
 3. Explain atomicity and why UI-only validation is insufficient.
-4. Distinguish authoritative state from a derived PostgreSQL read model.
-5. Identify missing business rules that must be resolved before building a settlement module.
+4. Distinguish authoritative chain state from frontend, cache, and event-consumer views.
+5. Identify missing business rules that must be resolved before building a task-and-reward workflow module.
 
 ## 1. Conceptual transaction lifecycle
 
@@ -72,7 +72,7 @@ The authoritative transition logic must validate each transaction against the st
 
 Validation in the API and UI is useful for user experience and early error reporting, but it is not a substitute for authoritative invariant enforcement.
 
-## 5. Settlement domain questions that must be answered
+## 5. Task-and-reward workflow domain questions that must be answered
 
 Before implementation, the project must decide and document:
 - What exactly is an account: institution, legal entity, sub-ledger, or wallet?
