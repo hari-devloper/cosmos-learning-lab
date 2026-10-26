@@ -13,7 +13,7 @@ A leader creates and assigns a task with a deadline and funded reward. The assig
 - Implement and test together; no fabricated outputs or assumed source paths.
 - Update docs, diagrams, commands, tests, failures, and interview notes as work happens.
 - Keep the application small. Advanced topics are labs, not extra product features.
-- See `docs/CONCEPT_COVERAGE_MATRIX.md` for the full list of major topics and the distinction between core implementation and labs.
+- See `docs/FINAL_COSMOS_POC_SCOPE.md` for the full list of major topics and the distinction between core implementation and labs.
 
 ## Stage 1 — Small task-domain model
 
@@ -90,7 +90,7 @@ A leader creates and assigns a task with a deadline and funded reward. The assig
 - For every major topic, document: concept and mental model; architecture/sequence diagrams; verified source paths; design trade-offs; exact commands; expected vs observed output; tests/failures/fixes; security/performance implications; interview questions and mastery evidence.
 - Explain the transaction, task, consensus, contract and IBC flows without notes and diagnose selected failures.
 
-**Exit gate:** every row in `docs/CONCEPT_COVERAGE_MATRIX.md` has either verified lab evidence or an explicitly documented limitation. Do not claim mastery from reading alone.
+**Exit gate:** every row in `docs/FINAL_COSMOS_POC_SCOPE.md` has either verified lab evidence or an explicitly documented limitation. Do not claim mastery from reading alone.
 
 ## Scope boundary
 
