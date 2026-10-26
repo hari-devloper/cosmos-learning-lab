@@ -144,7 +144,7 @@ Imagine a state transition calling a price API. One node receives 101.2 and anot
 A has 100 units. Two transfers each attempt to send 80. With a single agreed ordering and sequential balance validation, at most one can succeed unless the application explicitly permits credit/overdraft semantics. The invariant must be enforced by authoritative state-transition logic, not just the UI or read model.
 
 ### Experiment D — Read-model outage
-The chain continues processing but the PostgreSQL indexer is offline. The user-facing explorer may be stale or unavailable, but PostgreSQL must not become an alternative authoritative application state. Clients should query/reconcile against authoritative chain state after an outage.
+The chain continues processing while a client or event consumer is offline. Its view may be stale or unavailable; recovery must query/reconcile against authoritative chain state.
 
 ## 9. Interview questions
 
@@ -153,7 +153,7 @@ The chain continues processing but the PostgreSQL indexer is offline. The user-f
 3. How are consensus and transaction execution different?
 4. Give three examples of nondeterministic inputs that could cause state divergence.
 5. Explain safety versus liveness using a TeamTask example.
-6. Why should PostgreSQL be treated as a rebuildable read model in this project?
+6. Why must frontend and cached data be treated as views rather than authoritative chain state?
 7. What does it mean for a transaction to be applied atomically?
 8. If two transfers overspend the same balance, where must the invariant be enforced and why?
 9. Can a distributed database also have consensus? Explain why “blockchain versus database” is an oversimplification.
@@ -167,7 +167,7 @@ Write short answers in your own words:
 - [ ] Explain ordering versus execution using two conflicting transfers.
 - [ ] List five sources of nondeterminism and say whether each can affect consensus-critical state.
 - [ ] State three TeamTask invariants.
-- [ ] Explain how the system recovers its PostgreSQL read model after an outage.
+- [ ] Explain how a client recovers current state after being offline.
 - [ ] Explain one safety property and one liveness property.
 - [ ] Answer all ten interview questions without copying this document.
 
