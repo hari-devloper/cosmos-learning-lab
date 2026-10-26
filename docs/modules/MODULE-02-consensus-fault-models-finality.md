@@ -3,7 +3,7 @@
 - **Module ID:** COSMOS-FOUND-002
 - **Status:** Conceptual learning draft; not a version-pinned implementation guide
 - **Prerequisite:** COSMOS-FOUND-001 — Distributed Systems and Deterministic State Machines
-- **Project sequence:** Single-chain settlement first; IBC is deferred
+- **Project sequence:** TeamTask single-chain application first; multi-validator, CosmWasm/wasmd, and IBC follow their explicit roadmap phases
 
 ## Learning outcomes
 
@@ -63,9 +63,9 @@ The precise meanings and guarantees vary by protocol. Before exposing a status i
 ## 6. TeamTask Chain implications
 
 For TeamTask Chain:
-- Do not treat an API response such as “submitted” as proof of final settlement.
+- Do not treat an API response such as “submitted” as proof of finalized task/reward outcome.
 - Define separate transaction lifecycle states and their semantics.
-- Preserve transaction identifiers and enough information to reconcile API responses, chain events, and the PostgreSQL read model.
+- Preserve transaction identifiers and enough information to reconcile API responses, chain events, and the frontend or any derived view.
 - Do not let a stale indexer status override authoritative chain state.
 - Document what the system does when a transaction is delayed, rejected, committed, or when the indexer is behind.
 
@@ -104,7 +104,7 @@ The API returns that a transaction was received, but it never becomes part of a 
 - [ ] Explain the one-third intuition without claiming it is universal.
 - [ ] Draw a transaction lifecycle from submission to commit and business completion.
 - [ ] Describe a partition scenario and state what additional protocol information is needed to analyze it.
-- [ ] Define the settlement transaction statuses your product might expose.
+- [ ] Define the task transaction statuses your product might expose.
 - [ ] Answer all ten interview questions without copying this document.
 
 ## 10. Evidence and implementation status
