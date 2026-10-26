@@ -123,3 +123,21 @@ Append each completed experiment with date, exact version, command, actual outpu
 - **Interview questions answered:**
 - **Remaining gaps:**
 - **Review date:**
+
+
+## POC implementation status — 2026-10-26
+
+- [x] Created the initial dependency-free Go task-domain model under `poc/domain/`.
+- [x] Added unit tests for happy path, unauthorized actor, invalid task, rejection feedback and invalid transition behavior.
+- [ ] Run `cd poc/domain && go test ./...` in the learner's WSL environment and record actual output.
+- [ ] Scaffold the real Cosmos SDK chain under `chain/` using `docs/POC_BUILD_GUIDE.md`.
+- [ ] Record generated SDK, CometBFT and IBC-Go versions; build/test/start the local chain.
+- [ ] Port domain rules into the custom Cosmos module and add chain-level tests.
+- [ ] Implement funded bank-module reward transfer atomically with task approval.
+- [ ] Demonstrate the end-to-end task flow with CLI/query verification.
+
+The Go model is **domain logic only**, not an on-chain implementation. Tests are not marked passed because they have not been run in the target WSL environment.
+
+## Full concept coverage
+
+Use `docs/CONCEPT_COVERAGE_MATRIX.md` as the scope contract. Consensus, governance/upgrades, CosmWasm, IBC/ICS-20, operations and interview mastery are planned focused labs. Do not mark them complete until the relevant lab, source tracing, failure experiment and learner mastery evidence are recorded.
