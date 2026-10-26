@@ -129,7 +129,7 @@ Append each completed experiment with date, exact version, command, actual outpu
 
 - [x] Created the initial dependency-free Go task-domain model under `poc/domain/`.
 - [x] Added unit tests for happy path, unauthorized actor, invalid task, rejection feedback and invalid transition behavior.
-- [ ] Run `cd poc/domain && go test ./...` in the learner's WSL environment and record actual output.
+- [x] Domain package test run in the available execution environment (Go `1.23.2 linux/amd64`): `go test ./...` passed. Repeat in the learner's WSL environment and record that output separately.
 - [ ] Scaffold the real Cosmos SDK chain under `chain/` using `docs/POC_BUILD_GUIDE.md`.
 - [ ] Record generated SDK, CometBFT and IBC-Go versions; build/test/start the local chain.
 - [ ] Port domain rules into the custom Cosmos module and add chain-level tests.
