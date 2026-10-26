@@ -2,7 +2,7 @@
 
 - **Module ID:** COSMOS-FOUND-001
 - **Status:** Learning draft; conceptual material, not a version-pinned Cosmos source walkthrough
-- **Project sequence:** Single-chain settlement first; IBC is deferred
+- **Project sequence:** TeamTask single-chain application first; multi-validator, CosmWasm/wasmd, and IBC follow their explicit roadmap phases
 - **Purpose:** Establish the distributed-systems model needed to reason about blockchain execution and the TeamTask Chain learning application.
 
 ## Learning outcomes
@@ -44,9 +44,9 @@ The distinction is not that databases cannot be distributed or replicated; they 
 
 For TeamTask Chain:
 - The chain's state is authoritative for accepted application state.
-- A PostgreSQL read model/indexer is a derived view for search, reporting, and user interfaces.
-- The read model must be rebuildable from the authoritative chain history.
-- A database row in the read model must not independently authorize settlement.
+- Queries, events, and frontend views expose chain data but do not replace authoritative chain state.
+- Any future derived view must be reproducible from authoritative chain state and history.
+- A frontend state or cached response must not independently authorize a task transition or reward.
 
 ## 3. Replicated state machine
 
@@ -112,26 +112,25 @@ Do not say “blockchain is always available” or “transactions can never be 
 
 ## 7. TeamTask Chain example
 
-Suppose account A has 100 settlement units and requests a transfer of 70 units to account B.
+A leader creates a task, assigns it to a member, and funds the reward pool. The member moves the task through permitted states and submits it for review. The leader approves or rejects the submission.
 
-A simplified state transition could be described as:
+A simplified approval transition is:
 
-1. Authenticate/verify the transaction according to chain rules.
-2. Check that A exists and has at least 70 spendable units.
-3. Check applicable account status, denomination, limits, and authorization rules.
-4. Debit 70 from A and credit 70 to B atomically.
-5. Record the accepted result in the chain's transaction/event history.
-
-The example omits real cryptography, fees, module boundaries, and authorization details; it is a teaching model, not a final application specification.
+1. Verify the transaction signer and task permissions.
+2. Confirm the task is in the submitted state and the caller is its authorized leader.
+3. Confirm the task has not already been rewarded and the reward pool can cover the payment.
+4. Atomically record approval/reward status and execute the permitted bank transfer.
+5. Emit the appropriate event so clients can inspect the result.
 
 Potential invariants:
-- A transfer cannot debit more than the sender's spendable balance.
-- A successful transfer conserves value, except for explicitly modeled fees, minting, burning, or other issuance rules.
-- A transaction cannot be applied twice if its replay-protection mechanism says it is a duplicate.
-- A rejected transaction does not partially mutate settlement state.
-- Read-model data cannot override chain-authoritative state.
+- Only the assigned member can perform member workflow actions.
+- Only the authorized leader can approve or reject a submission.
+- Only an eligible submitted task can be approved.
+- A task reward can be paid at most once.
+- A failed/rejected transaction must not leave partial application state changes.
+- Frontend state, cached data, or an event consumer must not override chain-authoritative state.
 
-Before implementation, the project must define units/denominations, account identity, authorization, replay protection, fees, transaction status semantics, and failure/recovery behavior.
+The exact state names, messages, reward denomination, pool funding, and failure semantics must be defined and tested before implementation.
 
 ## 8. Failure thought experiments
 
@@ -153,7 +152,7 @@ The chain continues processing but the PostgreSQL indexer is offline. The user-f
 2. Why does deterministic execution matter when consensus already exists?
 3. How are consensus and transaction execution different?
 4. Give three examples of nondeterministic inputs that could cause state divergence.
-5. Explain safety versus liveness using a settlement example.
+5. Explain safety versus liveness using a TeamTask example.
 6. Why should PostgreSQL be treated as a rebuildable read model in this project?
 7. What does it mean for a transaction to be applied atomically?
 8. If two transfers overspend the same balance, where must the invariant be enforced and why?
@@ -167,7 +166,7 @@ Write short answers in your own words:
 - [ ] Draw a replicated state machine with at least three nodes.
 - [ ] Explain ordering versus execution using two conflicting transfers.
 - [ ] List five sources of nondeterminism and say whether each can affect consensus-critical state.
-- [ ] State three settlement invariants.
+- [ ] State three TeamTask invariants.
 - [ ] Explain how the system recovers its PostgreSQL read model after an outage.
 - [ ] Explain one safety property and one liveness property.
 - [ ] Answer all ten interview questions without copying this document.
