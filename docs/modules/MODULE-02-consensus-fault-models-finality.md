@@ -60,9 +60,9 @@ These terms should not be casually conflated:
 
 The precise meanings and guarantees vary by protocol. Before exposing a status in a UI, define the status semantics and source of truth.
 
-## 6. Institutional settlement implications
+## 6. TeamTask Chain implications
 
-For the Institutional Settlement Network:
+For TeamTask Chain:
 - Do not treat an API response such as “submitted” as proof of final settlement.
 - Define separate transaction lifecycle states and their semantics.
 - Preserve transaction identifiers and enough information to reconcile API responses, chain events, and the PostgreSQL read model.
@@ -115,4 +115,4 @@ The API returns that a transaction was received, but it never becomes part of a 
 - **Failure experiments:** thought experiments only; no execution results claimed.
 - **Cosmos SDK/CometBFT source paths:** intentionally deferred until the initial dependency baseline is verified.
 - **Tests/performance results:** none claimed.
-- **Next gate:** learner can explain the fault models, conditional safety/liveness guarantees, and transaction lifecycle. Then continue to Module 3: transactions, application state, and invariant design for single-chain settlement.
+- **Next gate:** learner can explain the fault models, conditional safety/liveness guarantees, and transaction lifecycle. Then continue to Module 3: transactions, application state, and invariant design for single-chain TeamTask workflow.
