@@ -140,4 +140,4 @@ The Go model is **domain logic only**, not an on-chain implementation. Tests are
 
 ## Full concept coverage
 
-Use `docs/CONCEPT_COVERAGE_MATRIX.md` as the scope contract. Consensus, governance/upgrades, CosmWasm, IBC/ICS-20, operations and interview mastery are planned focused labs. Do not mark them complete until the relevant lab, source tracing, failure experiment and learner mastery evidence are recorded.
+Use `docs/FINAL_COSMOS_POC_SCOPE.md` as the scope contract. Consensus, governance/upgrades, CosmWasm, IBC/ICS-20, operations and interview mastery are planned focused labs. Do not mark them complete until the relevant lab, source tracing, failure experiment and learner mastery evidence are recorded.
