@@ -97,3 +97,14 @@ Learner shared the complete `replace` block from the downloaded SDK `v0.54.4` `g
 - `github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7` (comment: replace broken goleveldb).
 
 The module file also contains a separate `retract` block for older SDK versions; it is not another replacement block. These are declarations in the SDK's own module file. Their effect on a consuming application's resolved module graph still needs to be inspected after a minimal disposable module is created.
+
+
+## Superseding decision — POC scaffold baseline (2026-10-26)
+
+The earlier interpretation above was too conservative about IBC compatibility and is superseded for the POC scaffold decision. The official Ignite CLI changelog for v30.0.0 states that its Cosmos scaffolding uses Cosmos SDK v0.55.x, IBC-Go v11.2.x and CometBFT v0.40.x. This provides a concrete, version-family-aligned scaffold route for our planned SDK v0.55.0 baseline; the previously inspected IBC-Go and wasmd go.mod files alone were not enough to conclude that the scaffold could not support IBC.
+
+Source: https://github.com/ignite/cli/blob/main/changelog.md
+
+Use Ignite CLI v30.x Cosmos commands as documented in `docs/POC_BUILD_GUIDE.md`. This is a **selected starting route, not a build-success claim**. Verify the exact generated versions, dependency graph, build, tests and local-chain startup before recording validation. Evaluate wasmd separately when the CosmWasm lab begins; do not add it to the core chain just to keep it ready.
+
+The current task is to build the POC in the real repository, not to create another disposable compatibility project.
